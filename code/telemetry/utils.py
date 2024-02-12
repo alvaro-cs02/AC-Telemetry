@@ -223,7 +223,7 @@ def collect_telemetry(interval=0.2, session_duration=5):
     start_time = time.time()  # Use time.time() for the start time
     filename = f"telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
-    # Define the columns for your dataframe
+    # Define the columns for your dataframe TODO Add personalization here, maybe calling a config and based on its content manage columns.
     columns = ['timestamp', 'gas', 'brake', 'speedKmh', 'rpms', 'gear']  # Add more as needed
     df = initialize_dataframe(columns)
 
