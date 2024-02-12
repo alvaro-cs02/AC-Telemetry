@@ -43,10 +43,6 @@ To start data extraction and visualization, run the main script from your termin
 python main.py
 ```
 
-## Contributing
-
-We welcome contributions from the community! If you have suggestions for improvements or new features, please feel free to fork the repository, make your changes, and submit a pull request.
-
 ## License
 
 ---
