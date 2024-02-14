@@ -20,4 +20,4 @@
 
 ## [Telemetry-based Haptic Rendering for Racing Game Experience Improvement.](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=10413623)
 
-##[Telemetry-based Optimisation for User Training in Racing Simulators](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8055808)
+## [Telemetry-based Optimisation for User Training in Racing Simulators](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8055808)
