@@ -1,3 +1,7 @@
+# ⚠️ Access Restrictions: Educational or Allowed VPN Required to access some of these links ⚠️
+
+Please note that you may need to be on an educational network or utilize an allowed VPN in order to access some of the following links.
+
 ## [Automatic Mapping of Human Behavior Data to Personality Model Parameters for Traffic Simulations in Virtual Environments](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=7317925)
 - **Objective:** The study aims to automatically map human behavior data to personality model parameters for more realistic traffic simulations in virtual environments. It highlights the importance of individual differences in driving behavior and how these can be integrated into simulation models.
 - **Methodology:** Utilizes data from driving simulators, focusing on various behaviors and styles to parameterize drivers' personalities in simulations.
