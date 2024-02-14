@@ -7,3 +7,5 @@
 ## [A Machine Learning Approach for Modeling and Analyzing of Driver Performance in Simulated Racing](https://link.springer.com/content/pdf/10.1007/978-3-031-26438-2_8.pdf)
 
 ## [Enhancement of Formula One Driver Performance by Process Learning](https://essay.utwente.nl/89793/1/Moghaddar_BA_EEMCS.pdf)
+
+## [Comparing driving behavior of humans and autonomous driving in a professional racing simulator](https://www.webofscience.com/api/gateway?GWVersion=2&SrcAuth=DOISource&SrcApp=UA&KeyAID=10.1371%2Fjournal.pone.0245320&DestApp=DOI&SrcAppSID=EUW1ED0D624sqFlABwfuJrduWiBbW&SrcJTitle=PLOS+ONE&DestDOIRegistrantName=Public+Library+of+Science)
