@@ -119,6 +119,5 @@ Please note that you may need to be on an educational network or utilize an allo
   - Customized training programs based on telemetry analysis lead to significant performance improvements in sim racers.
 - **Conclusions:** Telemetry data is invaluable for designing personalized training programs that can efficiently enhance driver skills in simulation environments.
 - **Relevance to Project:**
-  - Underlines the importance of detailed telemetry analysis in identifying performance gaps and designing effective training interventions.
   - Suggesting targeted training based on telemetry data analysis, offering personalized improvement plans for users.
 
