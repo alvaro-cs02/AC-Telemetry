@@ -1,4 +1,4 @@
-# ⚠️ Access Restrictions: Educational or Allowed VPN Required to access some of these links ⚠️
+# ⚠️ Access Restrictions: Educational or allowed VPN required to access some of these links ⚠️
 
 Please note that you may need to be on an educational network or utilize an allowed VPN in order to access some of the following links.
 
