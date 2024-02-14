@@ -11,3 +11,13 @@
 ## [Comparing driving behavior of humans and autonomous driving in a professional racing simulator](https://www.webofscience.com/api/gateway?GWVersion=2&SrcAuth=DOISource&SrcApp=UA&KeyAID=10.1371%2Fjournal.pone.0245320&DestApp=DOI&SrcAppSID=EUW1ED0D624sqFlABwfuJrduWiBbW&SrcJTitle=PLOS+ONE&DestDOIRegistrantName=Public+Library+of+Science)
 
 ## [Assies - Developing a Smart Telemetry Feedback System for S.pdf](https://essay.utwente.nl/87322/1/Assies_BA_EEMS.pdf)
+
+## [HammerDrive: A Task-Aware Driving Visual Attention Model](https://eprints.qut.edu.au/209066/1/76344545.pdf)
+
+## [In The Truman Show: Generating Dynamic Scenarios in a Driving Simulator](https://ris.utwente.nl/ws/files/6550466/Wassink06truman.pdf)
+
+## [Simulator telemetry (STING) and head up display designer middleware for the NADS MiniSim driving simulator](https://sci-hub.se/https://doi.org/10.1145/2809730.2809746)https://sci-hub.se/https://doi.org/10.1145/2809730.2809746
+
+## [Telemetry-based Haptic Rendering for Racing Game Experience Improvement.](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=10413623)
+
+##[Telemetry-based Optimisation for User Training in Racing Simulators](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8055808)
