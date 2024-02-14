@@ -9,3 +9,5 @@
 ## [Enhancement of Formula One Driver Performance by Process Learning](https://essay.utwente.nl/89793/1/Moghaddar_BA_EEMCS.pdf)
 
 ## [Comparing driving behavior of humans and autonomous driving in a professional racing simulator](https://www.webofscience.com/api/gateway?GWVersion=2&SrcAuth=DOISource&SrcApp=UA&KeyAID=10.1371%2Fjournal.pone.0245320&DestApp=DOI&SrcAppSID=EUW1ED0D624sqFlABwfuJrduWiBbW&SrcJTitle=PLOS+ONE&DestDOIRegistrantName=Public+Library+of+Science)
+
+## [Assies - Developing a Smart Telemetry Feedback System for S.pdf](https://essay.utwente.nl/87322/1/Assies_BA_EEMS.pdf)
