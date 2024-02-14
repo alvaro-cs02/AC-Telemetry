@@ -20,12 +20,6 @@
   - The detailed analysis of telemetry data from both humans and AI offers a valuable reference for what metrics to capture and how to interpret them in your tool.
   - Insights into driving behavior differences could enhance your visualizer's capability to cater to both competitive racers and those interested in AI performance, enabling users to compare and improve their driving tactics.
 
-### Integrating Insights into Your Project:
-- **Personalized Data Visualization:** Leverage insights into individual and AI driving behaviors to offer personalized telemetry visualizations, catering to diverse user needs and preferences.
-- **Behavioral Analysis Features:** Incorporate features that allow users to analyze and compare driving behaviors, highlighting areas for improvement or showcasing the differences between human and AI performance.
-- **Enhanced Realism:** Use the personality model mapping concept to introduce more nuanced analyses and visualizations that reflect the complex nature of driving behaviors, potentially offering more engaging and informative user experiences.
-
-These summaries encapsulate the core findings and implications of the cited studies, focusing on elements that could directly influence the design and functionality of your Assetto Corsa telemetry reader and visualizer.
 
 ## [Assessing Sim Racing Software for Low-Cost Driving Simulator to Road Geometric Research](https://riubu.ubu.es/bitstream/handle/10259/6929/Higuera_CIT2021_1377-1391.pdf;jsessionid=9CE591B96F85E68DDD7C74EC57C00944?sequence=1)
 - **Objective:** Evaluate the feasibility of using sim racing software, including popular titles like Assetto Corsa, for conducting low-cost road geometric research and its implications for real-world driving behavior.
@@ -60,10 +54,6 @@ These summaries encapsulate the core findings and implications of the cited stud
   - Highlights the importance of offering detailed telemetry data analysis capabilities in your tool, enabling drivers to pinpoint and work on specific areas of their performance.
   - Your visualizer could benefit from incorporating visual analytics that focus on performance improvement areas identified through process learning.
 
-### Integrating Insights into Your Project:
-- **Data-Driven Improvement:** All studies suggest the importance of leveraging telemetry data for driving performance analysis and improvement. Consider features that allow users to deeply analyze their driving behavior and receive suggestions for improvement.
-- **Machine Learning Integration:** Explore the possibility of integrating machine learning models to provide predictive analytics and personalized feedback based on telemetry data.
-- **Realism and Accuracy:** Ensure your telemetry reader and visualizer accurately reflect the physics and realism offered by Assetto Corsa, aligning with the expectations set by research on its applicability for road geometric and performance studies.
 
 ## [Comparing driving behavior of humans and autonomous driving in a professional racing simulator](https://www.webofscience.com/api/gateway?GWVersion=2&SrcAuth=DOISource&SrcApp=UA&KeyAID=10.1371%2Fjournal.pone.0245320&DestApp=DOI&SrcAppSID=EUW1ED0D624sqFlABwfuJrduWiBbW&SrcJTitle=PLOS+ONE&DestDOIRegistrantName=Public+Library+of+Science)
 - **Objective:** To compare human driving behavior with autonomous driving systems within a professional racing simulator, focusing on performance and decision-making differences.
@@ -133,17 +123,4 @@ These summaries encapsulate the core findings and implications of the cited stud
 - **Relevance to Project:**
   - Underlines the importance of detailed telemetry analysis in identifying performance gaps and designing effective training interventions.
   - Your visualizer could incorporate features that suggest targeted training based on telemetry data analysis, offering personalized improvement plans for users.
-
-### Integrating Insights into Your Project:
-- **Customizable Visualization:** Consider implementing customizable HUDs or dashboards in your telemetry visualizer, allowing users to select which data points are most relevant to their training needs or interests.
-- **Haptic Feedback Integration:** Explore possibilities for integrating haptic feedback based on telemetry data to offer a more immersive and enriched driving experience.
-- **Targeted Training Features:** Develop features that analyze user performance to identify weaknesses and recommend specific training modules or scenarios within Assetto Corsa, promoting skill development in a focused and efficient manner.
-
-### Integrating Insights into Your Project:
-- **Comparative Analysis & Benchmarking:** Incorporate features that allow users to compare their performance against AI, highlighting areas for improvement.
-- **Real-time Feedback:** Develop an intuitive interface that provides real-time, actionable feedback based on telemetry data to help drivers refine their skills.
-- **Attention-Focused Visualization:** Design visualizations that align with drivers' natural attention patterns, ensuring critical information is easily accessible and effectively communicated.
-- **Dynamic Content:** Explore the possibility of introducing dynamic scenarios or challenges within your visualizer, enhancing the training value and user engagement by simulating a range of driving conditions and strategies.
-
-
 
