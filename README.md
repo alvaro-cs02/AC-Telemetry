@@ -1,6 +1,6 @@
 ## ⚠️ ⚠️ THIS IS A TEMPLATE ⚠️ ⚠️
 
-# Assetto Corsa Telemetry Toolkit
+# Assetto Corsa Telemetry
 
 Welcome to the Assetto Corsa Telemetry Toolkit! This project is a versatile Python toolkit designed for Assetto Corsa enthusiasts, researchers, and anyone in between. It allows for highly customizable telemetry data extraction and analysis, suited for a variety of purposes beyond just racing. Whether you're analyzing lap times, investigating vehicle dynamics in simulated real-world scenarios, or conducting educational projects, this toolkit has got you covered.
 
