@@ -121,3 +121,4 @@ Please note that you may need to be on an educational network or utilize an allo
 - **Relevance to Project:**
   - Suggesting targeted training based on telemetry data analysis, offering personalized improvement plans for users.
 
+## [Feasibility and validity of a low-cost racing simulator in driving assessment after stroke](https://digitalcommons.wustl.edu/cgi/viewcontent.cgi?article=10272&context=open_access_pubs) 
