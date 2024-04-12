@@ -205,10 +205,6 @@ class SimInfo:
     def __del__(self):
         self.close()
 
-def read_config(config_path):
-    with open(config_path, 'r') as file:
-        return json.load(file)
-
 def initialize_dataframe(columns):
     return pd.DataFrame(columns=columns)
 
@@ -222,26 +218,22 @@ def collect_telemetry(interval=0.2, session_duration=5):
     sim_info = SimInfo()
     start_time = time.time()  # Use time.time() for the start time
     filename = f"telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-
-    # Define the columns for your dataframe TODO Add personalization here, maybe calling a config and based on its content manage columns.
-    columns = ['timestamp', 'gas', 'brake', 'speedKmh', 'rpms', 'gear']  # Add more as needed
-    df = initialize_dataframe(columns)
+    columns = ['timestamp', 'gas', 'brake', 'speedKmh', 'rpms', 'gear'] 
+    df = pd.DataFrame(columns=columns)
 
     while time.time() - start_time < session_duration:
-        # Create a dictionary for the current set of telemetry data
         data = {
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'),  # Corrected datetime usage
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), 
             'gas': sim_info.physics.gas,
             'brake': sim_info.physics.brake,
             'speedKmh': sim_info.physics.speedKmh,
             'rpms': sim_info.physics.rpms,
             'gear': sim_info.physics.gear,
-            # Add more data points as needed
+
         }
         print(data)
-        df = append_to_dataframe(df, data)
-        # Wait before the next read
-        time.sleep(interval)  # This can indeed be adjusted as needed
+        df = df._append(data, ignore_index=True)
+        time.sleep(interval)
 
-    save_dataframe_to_csv(df, filename)
-    sim_info.close()  # close the memory maps
+    df.to_csv(f"data/logs/telemetry/{filename}", index=False)
+    sim_info.close() 
