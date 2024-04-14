@@ -4,13 +4,12 @@ import ctypes
 import time
 from datetime import datetime
 import pandas as pd
-from profiles import profiles
 from constants import *
 import json
 import yaml
 from ctypes import c_int32, c_float, c_wchar
 
-def load_config(config_path="config.yaml"):
+def load_config(config_path="code/telemetry/config.yaml"):
     """ Load the YAML configuration file. """
     with open(config_path, "r") as file:
         return yaml.safe_load(file)
@@ -185,7 +184,11 @@ class SimInfo:
         self.close()
 
     def close(self):
-        # Close all mmap files safely
+        # Ensuring references are out of scope
+        del self.physics
+        del self.graphics
+        del self.static
+        # Safe cleanup
         self._acpmf_physics.close()
         self._acpmf_graphics.close()
         self._acpmf_static.close()
@@ -221,7 +224,7 @@ def collect_telemetry(profile_name, interval=0.2, session_duration=100):
                 data[column] = None  # Default to None if not found
 
         print(data)
-        df = df.append(data, ignore_index=True)  # Use 'append' instead of '_append'
+        df = df._append(data, ignore_index=True)  # Use 'append' instead of '_append'
         time.sleep(interval)
 
     df.to_csv(f"data/logs/telemetry/{filename}", index=False)
