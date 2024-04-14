@@ -10,7 +10,6 @@ import yaml
 from ctypes import c_int32, c_float, c_wchar
 
 def load_config(config_path="code/telemetry/config.yaml"):
-    """ Load the YAML configuration file. """
     with open(config_path, "r") as file:
         return yaml.safe_load(file)
 
@@ -184,17 +183,15 @@ class SimInfo:
         self.close()
 
     def close(self):
-        # Ensuring references are out of scope
         del self.physics
         del self.graphics
         del self.static
-        # Safe cleanup
+
         self._acpmf_physics.close()
         self._acpmf_graphics.close()
         self._acpmf_static.close()
 
 def collect_telemetry(profile_name, interval=0.2, session_duration=100):
-    # Load the configuration and get profiles
     config = load_config()
     profiles = config.get('profiles', {})
 
@@ -206,13 +203,11 @@ def collect_telemetry(profile_name, interval=0.2, session_duration=100):
     if not columns:
         raise ValueError(f"No data columns defined for profile: {profile_name}")
 
-    # Create a DataFrame with specified columns plus a timestamp
     df = pd.DataFrame(columns=['timestamp'] + columns)
 
     while time.time() - start_time < session_duration:
         data = {'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}
         
-        # Collect data for each field specified in the profile
         for column in columns:
             if hasattr(sim_info.physics, column):
                 data[column] = getattr(sim_info.physics, column)
@@ -221,10 +216,10 @@ def collect_telemetry(profile_name, interval=0.2, session_duration=100):
             elif hasattr(sim_info.graphics, column):
                 data[column] = getattr(sim_info.graphics, column)
             else:
-                data[column] = None  # Default to None if not found
+                data[column] = None
 
         print(data)
-        df = df._append(data, ignore_index=True)  # Use 'append' instead of '_append'
+        df = df._append(data, ignore_index=True) 
         time.sleep(interval)
 
     df.to_csv(f"data/logs/telemetry/{filename}", index=False)
