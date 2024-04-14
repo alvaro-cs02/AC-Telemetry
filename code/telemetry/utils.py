@@ -4,36 +4,18 @@ import ctypes
 import time
 from datetime import datetime
 import pandas as pd
+from profiles import profiles
+from constants import *
 import json
+import yaml
 from ctypes import c_int32, c_float, c_wchar
 
+def load_config(config_path="config.yaml"):
+    """ Load the YAML configuration file. """
+    with open(config_path, "r") as file:
+        return yaml.safe_load(file)
 
-AC_STATUS = c_int32
-AC_OFF = 0
-AC_REPLAY = 1
-AC_LIVE = 2
-AC_PAUSE = 3
-
-AC_SESSION_TYPE = c_int32
-AC_UNKNOWN = -1
-AC_PRACTICE = 0
-AC_QUALIFY = 1
-AC_RACE = 2
-AC_HOTLAP = 3
-AC_TIME_ATTACK = 4
-AC_DRIFT = 5
-AC_DRAG = 6
-
-AC_FLAG_TYPE = c_int32
-AC_NO_FLAG = 0
-AC_BLUE_FLAG = 1
-AC_YELLOW_FLAG = 2
-AC_BLACK_FLAG = 3
-AC_WHITE_FLAG = 4
-AC_CHECKERED_FLAG = 5
-AC_PENALTY_FLAG = 6
-
-class SPageFilePhysics(ctypes.Structure):
+class PhysicsInfo(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
         ('packetId', c_int32),
@@ -102,7 +84,7 @@ class SPageFilePhysics(ctypes.Structure):
     ]
 
 
-class SPageFileGraphic(ctypes.Structure):
+class GraphicInfo(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
         ('packetId', c_int32),
@@ -138,7 +120,7 @@ class SPageFileGraphic(ctypes.Structure):
     ]
 
 
-class SPageFileStatic(ctypes.Structure):
+class StaticInfo(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
         ('_smVersion', c_wchar * 15),
@@ -187,53 +169,60 @@ class SPageFileStatic(ctypes.Structure):
         ('PitWindowEnd', c_int32)
     ]
 
-
 class SimInfo:
     def __init__(self):
-        self._acpmf_physics = mmap.mmap(0, ctypes.sizeof(SPageFilePhysics), "acpmf_physics")
-        self._acpmf_graphics = mmap.mmap(0, ctypes.sizeof(SPageFileGraphic), "acpmf_graphics")
-        self._acpmf_static = mmap.mmap(0, ctypes.sizeof(SPageFileStatic), "acpmf_static")
-        self.physics = SPageFilePhysics.from_buffer(self._acpmf_physics)
-        self.graphics = SPageFileGraphic.from_buffer(self._acpmf_graphics)
-        self.static = SPageFileStatic.from_buffer(self._acpmf_static)
+        self._acpmf_physics = mmap.mmap(0, ctypes.sizeof(PhysicsInfo), "acpmf_physics")
+        self._acpmf_graphics = mmap.mmap(0, ctypes.sizeof(GraphicInfo), "acpmf_graphics")
+        self._acpmf_static = mmap.mmap(0, ctypes.sizeof(StaticInfo), "acpmf_static")
+        self.physics = PhysicsInfo.from_buffer(self._acpmf_physics)
+        self.graphics = GraphicInfo.from_buffer(self._acpmf_graphics)
+        self.static = StaticInfo.from_buffer(self._acpmf_static)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     def close(self):
+        # Close all mmap files safely
         self._acpmf_physics.close()
         self._acpmf_graphics.close()
         self._acpmf_static.close()
 
-    def __del__(self):
-        self.close()
+def collect_telemetry(profile_name, interval=0.2, session_duration=100):
+    # Load the configuration and get profiles
+    config = load_config()
+    profiles = config.get('profiles', {})
 
-def initialize_dataframe(columns):
-    return pd.DataFrame(columns=columns)
-
-def append_to_dataframe(df, data):
-    return df._append(data, ignore_index=True)
-
-def save_dataframe_to_csv(df, filename):
-    df.to_csv(f"data/logs/telemetry/{filename}", index=False)
-
-def collect_telemetry(interval=0.2, session_duration=5):
     sim_info = SimInfo()
-    start_time = time.time()  # Use time.time() for the start time
+    start_time = time.time()
     filename = f"telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-    columns = ['timestamp', 'gas', 'brake', 'speedKmh', 'rpms', 'gear'] 
-    df = pd.DataFrame(columns=columns)
+    columns = profiles.get(profile_name, [])
+    
+    if not columns:
+        raise ValueError(f"No data columns defined for profile: {profile_name}")
+
+    # Create a DataFrame with specified columns plus a timestamp
+    df = pd.DataFrame(columns=['timestamp'] + columns)
 
     while time.time() - start_time < session_duration:
-        data = {
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), 
-            'gas': sim_info.physics.gas,
-            'brake': sim_info.physics.brake,
-            'speedKmh': sim_info.physics.speedKmh,
-            'rpms': sim_info.physics.rpms,
-            'gear': sim_info.physics.gear,
+        data = {'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}
+        
+        # Collect data for each field specified in the profile
+        for column in columns:
+            if hasattr(sim_info.physics, column):
+                data[column] = getattr(sim_info.physics, column)
+            elif hasattr(sim_info.static, column):
+                data[column] = getattr(sim_info.static, column)
+            elif hasattr(sim_info.graphics, column):
+                data[column] = getattr(sim_info.graphics, column)
+            else:
+                data[column] = None  # Default to None if not found
 
-        }
         print(data)
-        df = df._append(data, ignore_index=True)
+        df = df.append(data, ignore_index=True)  # Use 'append' instead of '_append'
         time.sleep(interval)
 
     df.to_csv(f"data/logs/telemetry/{filename}", index=False)
-    sim_info.close() 
+    sim_info.close()
