@@ -206,14 +206,14 @@ def collect_data(sim_info, columns):
 def collect_telemetry(profile_name, interval=0.2):
     config = load_config()
     try:
-        profiles = dict(config.items(profile_name))  # Assuming profiles are sections in the INI file
+        profiles = dict(config.items(profile_name))
     except Exception as e:
         print(f"Error loading profile '{profile_name}': {e}")
         return
     
     sim_info = SimInfo()
     filename = f"data/logs/telemetry/telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-    columns = [key for key, value in profiles.items() if value.lower() == 'true']  # Filter columns based on true value
+    columns = [key for key, value in profiles.items() if value.lower() == 'true']
 
     with open(filename, mode='w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=['timestamp'] + columns)
