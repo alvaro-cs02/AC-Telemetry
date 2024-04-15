@@ -2,6 +2,7 @@ import mmap
 import functools
 import ctypes
 import time
+import threading
 from datetime import datetime
 import pandas as pd
 from constants import *
@@ -191,36 +192,28 @@ class SimInfo:
         self._acpmf_graphics.close()
         self._acpmf_static.close()
 
-def collect_telemetry(profile_name, interval=0.2, session_duration=100):
+def collect_data(sim_info, columns):
+    data = {'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}
+    for column in columns:
+        data[column] = getattr(sim_info.physics, column, getattr(sim_info.static, column, getattr(sim_info.graphics, column, None)))
+    return data
+
+def collect_telemetry(profile_name, interval=0.2):
     config = load_config()
     profiles = config.get('profiles', {})
 
     sim_info = SimInfo()
-    start_time = time.time()
     filename = f"telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     columns = profiles.get(profile_name, [])
-    
-    if not columns:
-        raise ValueError(f"No data columns defined for profile: {profile_name}")
-
     df = pd.DataFrame(columns=['timestamp'] + columns)
 
-    while time.time() - start_time < session_duration:
-        data = {'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}
-        
-        for column in columns:
-            if hasattr(sim_info.physics, column):
-                data[column] = getattr(sim_info.physics, column)
-            elif hasattr(sim_info.static, column):
-                data[column] = getattr(sim_info.static, column)
-            elif hasattr(sim_info.graphics, column):
-                data[column] = getattr(sim_info.graphics, column)
-            else:
-                data[column] = None
+    running = threading.Event()
+    running.set()  # Set this to stop by clearing it: running.clear()
 
-        print(data)
-        df = df._append(data, ignore_index=True) 
+    while running.is_set():
+        data = collect_data(sim_info, columns)
+        df = df.append(data, ignore_index=True)
+        df.to_csv(f"data/logs/telemetry/{filename}", mode='a', header=False, index=False)
         time.sleep(interval)
 
-    df.to_csv(f"data/logs/telemetry/{filename}", index=False)
     sim_info.close()
