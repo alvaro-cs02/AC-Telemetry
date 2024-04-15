@@ -1,18 +1,18 @@
 import mmap
 import functools
 import ctypes
+import csv
 import time
 import threading
 from datetime import datetime
-import pandas as pd
+from configparser import ConfigParser
 from constants import *
-import json
-import yaml
 from ctypes import c_int32, c_float, c_wchar
 
-def load_config(config_path="code/telemetry/config.yaml"):
-    with open(config_path, "r") as file:
-        return yaml.safe_load(file)
+def load_config(config_path="code/telemetry/config.ini"):
+    config = ConfigParser()
+    config.read(config_path)
+    return config
 
 class PhysicsInfo(ctypes.Structure):
     _pack_ = 4
@@ -195,25 +195,34 @@ class SimInfo:
 def collect_data(sim_info, columns):
     data = {'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}
     for column in columns:
-        data[column] = getattr(sim_info.physics, column, getattr(sim_info.static, column, getattr(sim_info.graphics, column, None)))
+        attribute = getattr(sim_info.physics, column, None)
+        if attribute is None:
+            attribute = getattr(sim_info.static, column, None)
+        if attribute is None:
+            attribute = getattr(sim_info.graphics, column, None)
+        data[column] = attribute
     return data
 
 def collect_telemetry(profile_name, interval=0.2):
     config = load_config()
-    profiles = config.get('profiles', {})
-
+    try:
+        profiles = dict(config.items(profile_name))  # Assuming profiles are sections in the INI file
+    except Exception as e:
+        print(f"Error loading profile '{profile_name}': {e}")
+        return
+    
     sim_info = SimInfo()
-    filename = f"telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-    columns = profiles.get(profile_name, [])
-    df = pd.DataFrame(columns=['timestamp'] + columns)
+    filename = f"data/logs/telemetry/telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    columns = [key for key, value in profiles.items() if value.lower() == 'true']  # Filter columns based on true value
 
-    running = threading.Event()
-    running.set()  # Set this to stop by clearing it: running.clear()
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=['timestamp'] + columns)
+        writer.writeheader()
 
-    while running.is_set():
-        data = collect_data(sim_info, columns)
-        df = df.append(data, ignore_index=True)
-        df.to_csv(f"data/logs/telemetry/{filename}", mode='a', header=False, index=False)
-        time.sleep(interval)
+        running = threading.Event()
+        running.set()  # Set this to stop by clearing it: running.clear()
 
-    sim_info.close()
+        while running.is_set():
+            data = collect_data(sim_info, columns)
+            writer.writerow(data)
+            time.sleep(interval)
