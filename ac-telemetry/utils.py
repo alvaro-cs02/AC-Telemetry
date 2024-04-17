@@ -1,5 +1,5 @@
 import mmap
-import functools
+#import functools
 import ctypes
 import csv
 import time
@@ -9,7 +9,7 @@ from configparser import ConfigParser
 from constants import *
 from ctypes import c_int32, c_float, c_wchar
 
-def load_config(config_path="code/telemetry/config.ini"):
+def load_config(config_path="ac-telemetry/config.ini"):
     config = ConfigParser()
     config.read(config_path)
     return config
@@ -212,7 +212,7 @@ def collect_telemetry(profile_name, interval=0.2):
         return
     
     sim_info = SimInfo()
-    filename = f"data/logs/telemetry/telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    filename = f"ac-telemetry/logs/telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     columns = [key for key, value in profiles.items() if value.lower() == 'true']
 
     with open(filename, mode='w', newline='') as file:

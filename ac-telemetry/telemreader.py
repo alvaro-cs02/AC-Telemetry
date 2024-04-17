@@ -1,2 +1,2 @@
 from utils import *
-collect_telemetry("custom", interval=0.1)
+collect_telemetry("racing", interval=0.1)

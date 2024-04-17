@@ -1,12 +1,11 @@
 import ac
 import os
-import subprocess
-import webbrowser
 import threading
 
-from telemetry.utils import collect_telemetry, load_config
+from utils import collect_telemetry, load_config
 
 def acMain(ac_version):
+    ac.log("AC Telemetry app loaded successfully!")
     appWindow = ac.newApp("AC Telemetry")
     ac.setSize(appWindow, 400, 400)
 
@@ -38,6 +37,6 @@ def stop_telemetry_thread(*args):
         telemetry_thread.join()
 
 def edit_config(*args):
-    config_path = "path/to/your/code/telemetry/config.yaml"
+    config_path = "ac-telemetry/telemetry/config.ini"
     os.startfile(config_path)
 
