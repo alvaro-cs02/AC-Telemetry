@@ -220,7 +220,7 @@ def collect_telemetry(profile_name, interval=0.2):
         writer.writeheader()
 
         running = threading.Event()
-        running.set()  # Set this to stop by clearing it: running.clear()
+        running.set()  
 
         while running.is_set():
             data = collect_data(sim_info, columns)

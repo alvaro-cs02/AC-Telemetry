@@ -29,7 +29,7 @@ def acMain(ac_version):
 
 def start_telemetry_thread(*args):
     global telemetry_thread
-    telemetry_thread = threading.Thread(target=collect_telemetry, args=("racing",))
+    telemetry_thread = threading.Thread(target=collect_telemetry, args=("custom",))
     telemetry_thread.start()
 
 def stop_telemetry_thread(*args):
