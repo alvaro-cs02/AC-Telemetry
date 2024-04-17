@@ -212,7 +212,7 @@ def collect_telemetry(profile_name, interval=0.2):
         return
     
     sim_info = SimInfo()
-    filename = f"ac-telemetry/logs/telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    filename = f"D:/SteamLibrary/steamapps/common/assettocorsa/apps/python/ac_telemetry/logs/telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     columns = [key for key, value in profiles.items() if value.lower() == 'true']
 
     with open(filename, mode='w', newline='') as file:

@@ -37,6 +37,6 @@ def stop_telemetry_thread(*args):
         telemetry_thread.join()
 
 def edit_config(*args):
-    config_path = "ac-telemetry/telemetry/config.ini"
+    config_path = "D:/SteamLibrary/steamapps/common/assettocorsa/apps/python/ac_telemetry/config.ini"
     os.startfile(config_path)
 
