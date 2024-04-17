@@ -208,11 +208,11 @@ def collect_telemetry(profile_name, interval=0.2):
     try:
         profiles = dict(config.items(profile_name))
     except Exception as e:
-        print(f"Error loading profile '{profile_name}': {e}")
+        print("Error loading profile '{}': {}".format(profile_name, e))
         return
     
     sim_info = SimInfo()
-    filename = f"D:/SteamLibrary/steamapps/common/assettocorsa/apps/python/ac_telemetry/logs/telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    filename = "D:/SteamLibrary/steamapps/common/assettocorsa/apps/python/ac_telemetry/logs/telemetry_{}.csv".format(datetime.now().strftime('%Y%m%d_%H%M%S'))
     columns = [key for key, value in profiles.items() if value.lower() == 'true']
 
     with open(filename, mode='w', newline='') as file:
