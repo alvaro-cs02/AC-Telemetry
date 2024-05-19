@@ -1,0 +1,10 @@
+{
+    "default": {
+        "logging_interval": 0.2
+    },
+    "profile1": [
+        "rpms",
+        "speedKmh",
+        "gear"
+    ]
+}

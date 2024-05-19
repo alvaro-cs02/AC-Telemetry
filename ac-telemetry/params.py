@@ -1,5 +1,13 @@
-from ctypes import c_int32
 
+from ctypes import c_int32
+from pathlib import Path
+
+AC_APP_DIR = Path("D:/Work/projects/AC-Telemetry/ac-telemetry")
+
+APP_DIR = Path("D:/path/to/your/telemetry/extractor/project")
+
+LOG_DIR = APP_DIR / "logs"
+CONFIG_FILE = APP_DIR / "config.json"
 AC_STATUS = c_int32
 AC_OFF = 0
 AC_REPLAY = 1

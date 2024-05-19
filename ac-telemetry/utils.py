@@ -3,16 +3,23 @@ import mmap
 import ctypes
 import csv
 import time
-import threading
 from datetime import datetime
-from configparser import ConfigParser
-from constants import *
+import json
+from datetime import datetime
+from params import *
 from ctypes import c_int32, c_float, c_wchar
+import yaml
+import json
 
-def load_config(config_path="ac-telemetry/config.ini"):
-    config = ConfigParser()
-    config.read(config_path)
-    return config
+config_file=f"D:/SteamLibrary/steamapps/common/assettocorsa/apps/python/telemetry_app/config.json"
+
+def load_config():
+    with open(CONFIG_FILE, 'r') as f:
+        return json.load(f)
+
+def save_config(config):
+    with open(CONFIG_FILE, 'w') as f:
+        json.dump(config, f, indent=4)
 
 class PhysicsInfo(ctypes.Structure):
     _pack_ = 4
@@ -167,7 +174,7 @@ class StaticInfo(ctypes.Structure):
         ('PitWindowStart', c_int32),
         ('PitWindowEnd', c_int32)
     ]
-
+    
 class SimInfo:
     def __init__(self):
         self._acpmf_physics = mmap.mmap(0, ctypes.sizeof(PhysicsInfo), "acpmf_physics")
@@ -206,23 +213,31 @@ def collect_data(sim_info, columns):
 def collect_telemetry(profile_name, interval=0.2):
     config = load_config()
     try:
-        profiles = dict(config.items(profile_name))
-    except Exception as e:
-        print("Error loading profile '{}': {}".format(profile_name, e))
+        profiles = config[profile_name]
+    except KeyError as e:
+        print(f"Error loading profile '{profile_name}': {e}")
         return
-    
+
     sim_info = SimInfo()
-    filename = "D:/SteamLibrary/steamapps/common/assettocorsa/apps/python/ac_telemetry/logs/telemetry_{}.csv".format(datetime.now().strftime('%Y%m%d_%H%M%S'))
-    columns = [key for key, value in profiles.items() if value.lower() == 'true']
+    filename = LOG_DIR / f"telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    columns = profiles
 
     with open(filename, mode='w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=['timestamp'] + columns)
         writer.writeheader()
 
-        running = threading.Event()
-        running.set()  
+        logging_active = False
 
-        while running.is_set():
-            data = collect_data(sim_info, columns)
-            writer.writerow(data)
+        while True:
+            if sim_info.physics.rpms > 0:
+                if not logging_active:
+                    print("RPMs greater than 0, starting telemetry logging.")
+                    logging_active = True
+                data = collect_data(sim_info, columns)
+                writer.writerow(data)
+            else:
+                if logging_active:
+                    print("RPMs dropped to 0, stopping telemetry logging.")
+                    logging_active = False
             time.sleep(interval)
+
