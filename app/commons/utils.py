@@ -6,12 +6,11 @@ import time
 from datetime import datetime
 import json
 from datetime import datetime
-from params import *
+from commons.params import *
 from ctypes import c_int32, c_float, c_wchar
 import yaml
 import json
 
-config_file=f"D:/SteamLibrary/steamapps/common/assettocorsa/apps/python/telemetry_app/config.json"
 
 def load_config():
     with open(CONFIG_FILE, 'r') as f:
@@ -229,15 +228,23 @@ def collect_telemetry(profile_name, interval=0.2):
         logging_active = False
 
         while True:
-            if sim_info.physics.rpms > 0:
+            game_status = sim_info.graphics.status 
+            speed = sim_info.physics.speedKmh
+            rpms = sim_info.physics.rpms 
+
+            if game_status == 2 and rpms > 0 and speed > 0:
                 if not logging_active:
-                    print("RPMs greater than 0, starting telemetry logging.")
+                    print("Race started, starting telemetry logging.")
                     logging_active = True
                 data = collect_data(sim_info, columns)
                 writer.writerow(data)
             else:
                 if logging_active:
-                    print("RPMs dropped to 0, stopping telemetry logging.")
+                    print("Race stopped or paused, stopping telemetry logging.")
                     logging_active = False
+
             time.sleep(interval)
+
+# Example usage
+#collect_telemetry("your_profile_name")
 

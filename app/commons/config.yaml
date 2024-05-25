@@ -1,0 +1,17 @@
+default:
+  logging_interval: 0.2
+profiles:
+  profile1:
+  - rpms
+  - speedKmh
+  - gear
+  profile2:
+  - carCoordinates
+  - penalty
+  - flag
+  - speedKmh
+  - gear
+  - rpms
+  - maxRpm
+  - maxFuel
+  - suspensionMaxTravel
