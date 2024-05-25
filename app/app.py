@@ -2,7 +2,9 @@ import dash
 from dash import dcc, html, Input, Output, State, callback_context
 import dash_bootstrap_components as dbc
 import yaml
+import threading
 from commons.params import *
+from commons.utils import collect_telemetry
 
 with open(CONFIG_FILE, 'r') as file:
     config = yaml.safe_load(file)
@@ -63,7 +65,8 @@ app.layout = html.Div([
                     value=initial_profile,
                     clearable=False
                 )
-            ])
+            ]),
+            dbc.Col(dbc.Button("Start Telemetry", id='start-telemetry', color="success"), className="mt-4")
         ], className="mb-4"),
         dbc.Toast(
             id="notification",
@@ -89,11 +92,13 @@ app.layout = html.Div([
     Input('save-changes', 'n_clicks'),
     Input('add-profile', 'n_clicks'),
     Input('update-interval', 'n_clicks'),
+    Input('start-telemetry', 'n_clicks'),
     State('variables-checklist', 'value'),
     State('logging-interval', 'value'),
     State('new-profile-name', 'value'),
+    State('active-profile-dropdown', 'value')
 )
-def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, variables, logging_interval, new_profile_name):
+def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, start_telemetry_clicks, variables, logging_interval, new_profile_name, active_profile):
     ctx = callback_context
     triggered = [t['prop_id'] for t in ctx.triggered]
 
@@ -175,6 +180,13 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, var
             notification_message,
             [{'label': k, 'value': k} for k in config['profiles'].keys()]
         )
+
+    if 'start-telemetry.n_clicks' in triggered:
+        # Start telemetry collection in a separate thread
+        thread = threading.Thread(target=collect_telemetry, args=(active_profile, logging_interval))
+        thread.start()
+        notification_message = f"Started telemetry collection for profile '{active_profile}' with interval {logging_interval}."
+        notification_open = True
 
     # Default return
     return (

@@ -1,17 +1,18 @@
 default:
   logging_interval: 0.5
 profiles:
-  profile1:
-  - rpms
+  profile1: &id001
   - speedKmh
+  - rpms
   - gear
-  - lastTime
-  - currentTime
-  - session
-  - kersMaxJ
-  - hasERS
-  - windDirection
+  - fuel
   - brake
+  - gas
+  - windDirection
+  - tyreWear
+  - suspensionTravel
+  - status
+  - distanceTraveled
   profile2:
   - carCoordinates
   - flag
@@ -32,3 +33,4 @@ profiles:
   - finalFF
   - tyreContactHeading
   - tyreContactNormal
+  test_1_lambo: *id001

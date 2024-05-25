@@ -13,12 +13,8 @@ import json
 
 
 def load_config():
-    with open(CONFIG_FILE, 'r') as f:
-        return json.load(f)
-
-def save_config(config):
-    with open(CONFIG_FILE, 'w') as f:
-        json.dump(config, f, indent=4)
+    with open(CONFIG_FILE, 'r') as file:
+        return yaml.safe_load(file)
 
 class PhysicsInfo(ctypes.Structure):
     _pack_ = 4
@@ -212,7 +208,7 @@ def collect_data(sim_info, columns):
 def collect_telemetry(profile_name, interval=0.2):
     config = load_config()
     try:
-        profiles = config[profile_name]
+        profiles = config['profiles'][profile_name]
     except KeyError as e:
         print(f"Error loading profile '{profile_name}': {e}")
         return
@@ -228,7 +224,7 @@ def collect_telemetry(profile_name, interval=0.2):
         logging_active = False
 
         while True:
-            game_status = sim_info.graphics.status 
+            game_status = sim_info.graphics.status
             speed = sim_info.physics.speedKmh
             rpms = sim_info.physics.rpms 
 
@@ -244,7 +240,4 @@ def collect_telemetry(profile_name, interval=0.2):
                     logging_active = False
 
             time.sleep(interval)
-
-# Example usage
-#collect_telemetry("your_profile_name")
 
