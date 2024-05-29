@@ -5,10 +5,14 @@ import yaml
 import threading
 from commons.params import *
 from commons.utils import collect_telemetry
+from datetime import datetime
+import csv
+import time
+import os
 
 with open(CONFIG_FILE, 'r') as file:
     config = yaml.safe_load(file)
-    
+
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 initial_profile = list(config['profiles'].keys())[0]
@@ -68,6 +72,15 @@ app.layout = html.Div([
             ]),
             dbc.Col(dbc.Button("Start Telemetry", id='start-telemetry', color="success"), className="mt-4")
         ], className="mb-4"),
+        dbc.Row([
+            dbc.Col([
+                html.H5("Metadata"),
+                dcc.Input(id='metadata-name', type='text', placeholder='Driver name', className="mb-2"),
+                dcc.Input(id='metadata-car', type='text', placeholder='Car', className="mb-2"),
+                dcc.Input(id='metadata-map', type='text', placeholder='Map', className="mb-2"),
+                dcc.Input(id='file-name', type='text', placeholder='File Name', className="mb-2"),
+            ])
+        ]),
         dbc.Toast(
             id="notification",
             header="Notification",
@@ -96,9 +109,13 @@ app.layout = html.Div([
     State('variables-checklist', 'value'),
     State('logging-interval', 'value'),
     State('new-profile-name', 'value'),
-    State('active-profile-dropdown', 'value')
+    State('active-profile-dropdown', 'value'),
+    State('metadata-name', 'value'),
+    State('metadata-car', 'value'),
+    State('metadata-map', 'value'),
+    State('file-name', 'value')
 )
-def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, start_telemetry_clicks, variables, logging_interval, new_profile_name, active_profile):
+def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, start_telemetry_clicks, variables, logging_interval, new_profile_name, active_profile, metadata_name, metadata_car, metadata_map, file_name):
     ctx = callback_context
     triggered = [t['prop_id'] for t in ctx.triggered]
 
@@ -183,7 +200,19 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, sta
 
     if 'start-telemetry.n_clicks' in triggered:
         # Start telemetry collection in a separate thread
-        thread = threading.Thread(target=collect_telemetry, args=(active_profile, logging_interval))
+        if file_name:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            full_file_name = f"{file_name}_{timestamp}.csv"
+        else:
+            full_file_name = f"telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+
+        metadata = {
+            "name": metadata_name,
+            "car": metadata_car,
+            "map": metadata_map
+        }
+
+        thread = threading.Thread(target=collect_telemetry, args=(active_profile, logging_interval, full_file_name, metadata))
         thread.start()
         notification_message = f"Started telemetry collection for profile '{active_profile}' with interval {logging_interval}."
         notification_open = True

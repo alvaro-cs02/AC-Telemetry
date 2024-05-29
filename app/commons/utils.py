@@ -205,7 +205,7 @@ def collect_data(sim_info, columns):
         data[column] = attribute
     return data
 
-def collect_telemetry(profile_name, interval=0.2):
+def collect_telemetry(profile_name, interval=0.2, file_name='telemetry.csv', metadata=None):
     config = load_config()
     try:
         profiles = config['profiles'][profile_name]
@@ -214,26 +214,34 @@ def collect_telemetry(profile_name, interval=0.2):
         return
 
     sim_info = SimInfo()
-    filename = LOG_DIR / f"telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    filename = LOG_DIR / file_name
     columns = profiles
+
+    logging_active = False
 
     with open(filename, mode='w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=['timestamp'] + columns)
+        
+        if metadata:
+            # Write metadata as comments at the top of the file
+            file.write(f"# Name: {metadata.get('name', '')}\n")
+            file.write(f"# Car: {metadata.get('car', '')}\n")
+            file.write(f"# Map: {metadata.get('map', '')}\n")
+        
         writer.writeheader()
-
-        logging_active = False
 
         while True:
             game_status = sim_info.graphics.status
-            speed = sim_info.physics.speedKmh
-            rpms = sim_info.physics.rpms 
+            pit = sim_info.graphics.isInPit 
 
-            if game_status == 2 and rpms > 0 and speed > 0:
-                if not logging_active:
+            if game_status == 2:
+                if pit == 0 and not logging_active:
                     print("Race started, starting telemetry logging.")
                     logging_active = True
-                data = collect_data(sim_info, columns)
-                writer.writerow(data)
+
+                if logging_active:
+                    data = collect_data(sim_info, columns)
+                    writer.writerow(data)
             else:
                 if logging_active:
                     print("Race stopped or paused, stopping telemetry logging.")

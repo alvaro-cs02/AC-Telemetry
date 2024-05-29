@@ -1,5 +1,5 @@
 default:
-  logging_interval: 0.5
+  logging_interval: 0.4
 profiles:
   profile1: &id001
   - speedKmh
