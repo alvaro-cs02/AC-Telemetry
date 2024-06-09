@@ -202,6 +202,11 @@ def collect_data(sim_info, columns):
             attribute = getattr(sim_info.static, column, None)
         if attribute is None:
             attribute = getattr(sim_info.graphics, column, None)
+        if isinstance(attribute, ctypes.Array):
+            if isinstance(attribute[0], ctypes.Array):
+                attribute = [list(inner_array) for inner_array in attribute]
+            else:
+                attribute = list(attribute)
         data[column] = attribute
     return data
 

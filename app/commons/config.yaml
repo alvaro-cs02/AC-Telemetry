@@ -1,18 +1,151 @@
 default:
   logging_interval: 0.4
 profiles:
-  profile1: &id001
+  asdfadsf: &id001
   - speedKmh
   - rpms
   - gear
   - fuel
   - brake
   - gas
-  - windDirection
   - tyreWear
   - suspensionTravel
+  - steerAngle
+  - pitch
+  - roll
+  - position
+  - packetId
   - status
+  - session
+  - currentTime
+  - lastTime
+  - bestTime
+  - split
+  - completedLaps
+  - iCurrentTime
+  - iLastTime
+  - iBestTime
+  - sessionTimeLeft
   - distanceTraveled
+  - isInPit
+  - currentSectorIndex
+  - lastSectorTime
+  - numberOfLaps
+  - tyreCompound
+  - replayTimeMultiplier
+  - normalizedCarPosition
+  - carCoordinates
+  - penaltyTime
+  - flag
+  - idealLineOn
+  - isInPitLane
+  - surfaceGrip
+  - mandatoryPitDone
+  - windSpeed
+  - windDirection
+  - velocity
+  - accG
+  - wheelSlip
+  - wheelLoad
+  - wheelsPressure
+  - wheelAngularSpeed
+  - tyreDirtyLevel
+  - tyreCoreTemperature
+  - camberRAD
+  - drs
+  - tc
+  - heading
+  - cgHeight
+  - carDamage
+  - numberOfTyresOut
+  - pitLimiterOn
+  - abs
+  - kersCharge
+  - kersInput
+  - autoShifterOn
+  - rideHeight
+  - turboBoost
+  - ballast
+  - airDensity
+  - airTemp
+  - roadTemp
+  - localAngularVel
+  - finalFF
+  - performanceMeter
+  - engineBrake
+  - ersRecoveryLevel
+  - ersPowerLevel
+  - ersHeatCharging
+  - ersIsCharging
+  - kersCurrentKJ
+  - drsAvailable
+  - drsEnabled
+  - brakeTemp
+  - clutch
+  - tyreTempI
+  - tyreTempM
+  - tyreTempO
+  - isAIControlled
+  - tyreContactPoint
+  - tyreContactNormal
+  - tyreContactHeading
+  - brakeBias
+  - localVelocity
+  - _smVersion
+  - _acVersion
+  - numberOfSessions
+  - numCars
+  - carModel
+  - track
+  - playerName
+  - playerSurname
+  - playerNick
+  - sectorCount
+  - maxTorque
+  - maxPower
+  - maxRpm
+  - maxFuel
+  - tyreRadius
+  - suspensionMaxTravel
+  - maxTurboBoost
+  - deprecated_1
+  - deprecated_2
+  - penaltiesEnabled
+  - aidFuelRate
+  - aidTireRate
+  - aidMechanicalDamage
+  - aidAllowTyreBlankets
+  - aidStability
+  - aidAutoClutch
+  - aidAutoBlip
+  - hasDRS
+  - hasERS
+  - hasKERS
+  - kersMaxJ
+  - engineBrakeSettingsCount
+  - ersPowerControllerCount
+  - trackSPlineLength
+  - trackConfiguration
+  - ersMaxJ
+  - isTimedRace
+  - hasExtraLap
+  - carSkin
+  - reversedGridPositions
+  - PitWindowStart
+  - PitWindowEnd
+  profile1:
+  - speedKmh
+  - rpms
+  - gear
+  - fuel
+  - brake
+  - gas
+  - tyreWear
+  - suspensionTravel
+  - steerAngle
+  - pitch
+  - roll
+  - position
   profile2:
   - carCoordinates
   - flag
@@ -33,4 +166,28 @@ profiles:
   - finalFF
   - tyreContactHeading
   - tyreContactNormal
-  test_1_lambo: *id001
+  test_1_lambo:
+  - speedKmh
+  - rpms
+  - gear
+  - fuel
+  - brake
+  - gas
+  - windDirection
+  - tyreWear
+  - suspensionTravel
+  - status
+  - distanceTraveled
+  test_all: *id001
+  yara:
+  - speedKmh
+  - rpms
+  - gear
+  - fuel
+  - brake
+  - gas
+  - tyreWear
+  - suspensionTravel
+  - steerAngle
+  - pitch
+  - roll
