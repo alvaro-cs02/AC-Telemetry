@@ -1,5 +1,3 @@
-## ⚠️ ⚠️ THIS IS A TEMPLATE ⚠️ ⚠️
-
 # Assetto Corsa Telemetry
 
 Welcome to the Assetto Corsa Telemetry Toolkit! This project is a versatile Python toolkit designed for Assetto Corsa enthusiasts, researchers, and anyone in between. It allows for highly customizable telemetry data extraction and analysis, suited for a variety of purposes beyond just racing. Whether you're analyzing lap times, investigating vehicle dynamics in simulated real-world scenarios, or conducting educational projects, this toolkit has got you covered.
@@ -12,42 +10,81 @@ Welcome to the Assetto Corsa Telemetry Toolkit! This project is a versatile Pyth
 
 - **Versatile Application**: Whether you're a racer looking to improve your lap times, a researcher conducting studies, or an educator using Assetto Corsa for teaching physics concepts, this toolkit is designed to adapt to your needs.
 
-## Getting Started (TODO)
+## Getting Started
 
 ### Prerequisites
 
-- Python 3.x installed on your machine
+- Miniconda installed on your machine
 - Assetto Corsa game installed
 - Basic understanding of Python for setup and customization
 
-### Installation (TODO)
+### Installation
 
-1. Clone this repository to your local machine.
+1. **Clone the Repository**
+
+   Open a terminal (Command Prompt, PowerShell, or Git Bash) and run the following command:
+
+   ```sh
+   git clone https://github.com/alvaro-cs02/AC-Telemetry.git
+   cd AC-Telemetry
    ```
-   git clone ''
+
+2. **Install Miniconda**
+
+   Download and install Miniconda from the [official website](https://docs.conda.io/en/latest/miniconda.html). During installation, make sure to check the option to **"Add Miniconda to my PATH environment variable"** (even though it is not recommended).
+
+3. **Create a Conda Environment**
+
+   Open a terminal and create a new Conda environment with Python 3.12:
+
+   ```sh
+   conda create -n ac_telemetry_env python=3.12
    ```
-2. Install the required Python packages.
+
+   **Note:** You can replace `ac_telemetry_env` with any name you prefer for your environment.
+
+4. **Activate the Environment**
+
+   Activate the newly created environment:
+
+   ```sh
+   conda activate ac_telemetry_env
    ```
-   pip install -r requirements.txt (TODO)
+
+5. **Install the Package**
+
+   Inside the repository folder, run:
+
+   ```sh
+   pip install -e .
    ```
 
 ### Configuration
 
-1. Navigate to the `config.json` file in the project directory.
-2. Edit the file to specify which telemetry parameters you'd like to capture. A comprehensive list of parameters and instructions on how to customize this file are included in the `config_guide.md`.
+Navigate to `params_template.py` inside the `commons` directory and change the following line to reflect the path to your cloned repository:
 
-### Running the Toolkit
+```python
+APP_DIR = Path("YOUR PATH TO THE REPO")
+```
 
-To start data extraction and visualization, run the main script from your terminal or command prompt:
+### Running the App
+
+To run the application, use:
+
+```sh
+python run.py
 ```
-python main.py
-```
+
+Then, open your browser and navigate to [http://127.0.0.1:8050/](http://127.0.0.1:8050/). Alternatively, you can click the link in the terminal.
+
+### Alternative Installation
+
+If you already have Python installed and don't want to use a Conda environment, you can simply run `pip install -e .` in the repository folder, and it should install dependencies in your global Python environment, provided the Python version is compatible.
 
 ## License
 
----
+This project is licensed under the MIT License.
 
 ## Acknowledgments
 
 - Thanks to the Assetto Corsa community for the invaluable resources and discussions that have helped shape this project.
---------------------

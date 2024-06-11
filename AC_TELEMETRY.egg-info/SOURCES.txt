@@ -1,0 +1,8 @@
+README.md
+setup.py
+AC_TELEMETRY.egg-info/PKG-INFO
+AC_TELEMETRY.egg-info/SOURCES.txt
+AC_TELEMETRY.egg-info/dependency_links.txt
+AC_TELEMETRY.egg-info/entry_points.txt
+AC_TELEMETRY.egg-info/requires.txt
+AC_TELEMETRY.egg-info/top_level.txt

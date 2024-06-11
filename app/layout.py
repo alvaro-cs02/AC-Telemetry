@@ -35,15 +35,35 @@ layout = html.Div([
             dbc.Col([
                 html.H5("Telemetry Variables"),
                 html.Div([
+                    html.H6("Graphic Info"),
                     dcc.Checklist(
-                        id='variables-checklist',
+                        id='variables-checklist-graphic',
                         options=[
                             {'label': html.Span([html.B(var['name']), f" - {var['description']}"]), 'value': var['name']}
-                            for section in TELEMETRY_VARIABLES.values()
-                            for var in section['variables']
+                            for var in TELEMETRY_VARIABLES['graphic_info']['variables']
                         ],
-                        value=config['profiles'][initial_profile],
-                        style={'overflowY': 'scroll', 'maxHeight': '400px', 'border': '1px solid #ccc', 'padding': '10px'}
+                        value=[var['name'] for var in TELEMETRY_VARIABLES['graphic_info']['variables'] if var['name'] in config['profiles'][initial_profile]],
+                        style={'overflowY': 'scroll', 'maxHeight': '150px', 'border': '1px solid #ccc', 'padding': '10px'}
+                    ),
+                    html.H6("Physics Info", className="mt-3"),
+                    dcc.Checklist(
+                        id='variables-checklist-physics',
+                        options=[
+                            {'label': html.Span([html.B(var['name']), f" - {var['description']}"]), 'value': var['name']}
+                            for var in TELEMETRY_VARIABLES['physics_info']['variables']
+                        ],
+                        value=[var['name'] for var in TELEMETRY_VARIABLES['physics_info']['variables'] if var['name'] in config['profiles'][initial_profile]],
+                        style={'overflowY': 'scroll', 'maxHeight': '150px', 'border': '1px solid #ccc', 'padding': '10px'}
+                    ),
+                    html.H6("Static Info", className="mt-3"),
+                    dcc.Checklist(
+                        id='variables-checklist-static',
+                        options=[
+                            {'label': html.Span([html.B(var['name']), f" - {var['description']}"]), 'value': var['name']}
+                            for var in TELEMETRY_VARIABLES['static_info']['variables']
+                        ],
+                        value=[var['name'] for var in TELEMETRY_VARIABLES['static_info']['variables'] if var['name'] in config['profiles'][initial_profile]],
+                        style={'overflowY': 'scroll', 'maxHeight': '150px', 'border': '1px solid #ccc', 'padding': '10px'}
                     )
                 ], style={'height': '450px', 'overflowY': 'auto', 'border': '1px solid #ccc', 'border-radius': '5px', 'padding': '10px'})
             ])

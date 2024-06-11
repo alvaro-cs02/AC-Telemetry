@@ -11,7 +11,6 @@ from ctypes import c_int32, c_float, c_wchar
 import yaml
 import json
 
-
 def load_config():
     with open(CONFIG_FILE, 'r') as file:
         return yaml.safe_load(file)

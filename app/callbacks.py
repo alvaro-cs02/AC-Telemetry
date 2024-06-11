@@ -3,7 +3,7 @@ import yaml
 import threading
 from app import app, get_config, get_initial_profile
 from commons.utils import collect_telemetry
-from commons.params import CONFIG_FILE
+from commons.params import CONFIG_FILE, TELEMETRY_VARIABLES
 from datetime import datetime
 
 config = get_config()
@@ -13,7 +13,9 @@ initial_profile = get_initial_profile()
     Output('profile-dropdown', 'options'),
     Output('profile-dropdown', 'value'),
     Output('logging-interval', 'value'),
-    Output('variables-checklist', 'value'),
+    Output('variables-checklist-graphic', 'value'),
+    Output('variables-checklist-physics', 'value'),
+    Output('variables-checklist-static', 'value'),
     Output('new-profile-name', 'style'),
     Output('notification', 'is_open'),
     Output('notification', 'children'),
@@ -23,7 +25,9 @@ initial_profile = get_initial_profile()
     Input('add-profile', 'n_clicks'),
     Input('update-interval', 'n_clicks'),
     Input('start-telemetry', 'n_clicks'),
-    State('variables-checklist', 'value'),
+    State('variables-checklist-graphic', 'value'),
+    State('variables-checklist-physics', 'value'),
+    State('variables-checklist-static', 'value'),
     State('logging-interval', 'value'),
     State('new-profile-name', 'value'),
     State('active-profile-dropdown', 'value'),
@@ -32,7 +36,7 @@ initial_profile = get_initial_profile()
     State('metadata-map', 'value'),
     State('file-name', 'value')
 )
-def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, start_telemetry_clicks, variables, logging_interval, new_profile_name, active_profile, metadata_name, metadata_car, metadata_map, file_name):
+def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, start_telemetry_clicks, graphic_vars, physics_vars, static_vars, logging_interval, new_profile_name, active_profile, metadata_name, metadata_car, metadata_map, file_name):
     ctx = callback_context
     triggered = [t['prop_id'] for t in ctx.triggered]
 
@@ -44,21 +48,26 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, sta
         # Update profile settings
         if profile in config['profiles']:
             variables = config['profiles'][profile]
+            graphic_vars = [var for var in variables if var in [v['name'] for v in TELEMETRY_VARIABLES['graphic_info']['variables']]]
+            physics_vars = [var for var in variables if var in [v['name'] for v in TELEMETRY_VARIABLES['physics_info']['variables']]]
+            static_vars = [var for var in variables if var in [v['name'] for v in TELEMETRY_VARIABLES['static_info']['variables']]]
             logging_interval = config['default']['logging_interval']
         return (
             [{'label': k, 'value': k} for k in config['profiles'].keys()],
             profile,
             logging_interval,
-            variables,
+            graphic_vars,
+            physics_vars,
+            static_vars,
             {'display': 'none'},
             notification_open,
             notification_message,
             [{'label': k, 'value': k} for k in config['profiles'].keys()]
         )
-    
+
     if 'save-changes.n_clicks' in triggered:
         # Save changes to the selected profile
-        config['profiles'][profile] = variables
+        config['profiles'][profile] = graphic_vars + physics_vars + static_vars
 
         with open(CONFIG_FILE, 'w') as file:
             yaml.dump(config, file)
@@ -82,7 +91,9 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, sta
             [{'label': k, 'value': k} for k in config['profiles'].keys()],
             profile,
             logging_interval,
-            variables,
+            graphic_vars,
+            physics_vars,
+            static_vars,
             {'display': 'block', 'margin-top': '10px'},
             notification_open,
             notification_message,
@@ -95,7 +106,7 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, sta
             notification_message = "Profile already exists!"
             notification_open = True
         else:
-            config['profiles'][new_profile_name] = variables
+            config['profiles'][new_profile_name] = graphic_vars + physics_vars + static_vars
             profile = new_profile_name
 
             with open(CONFIG_FILE, 'w') as file:
@@ -108,7 +119,9 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, sta
             [{'label': k, 'value': k} for k in config['profiles'].keys()],
             profile,
             logging_interval,
-            variables,
+            graphic_vars,
+            physics_vars,
+            static_vars,
             {'display': 'none'},
             notification_open,
             notification_message,
@@ -139,7 +152,9 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, sta
         [{'label': k, 'value': k} for k in config['profiles'].keys()],
         profile,
         logging_interval,
-        variables,
+        graphic_vars,
+        physics_vars,
+        static_vars,
         {'display': 'none'},
         notification_open,
         notification_message,
