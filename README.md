@@ -84,7 +84,7 @@ If you already have Python installed and don't want to use a Conda environment, 
 
 ## License
 
-This project is licensed under the MIT License.
+This project is free for everyone to use however they like. You are encouraged to contribute to the project by sending pull requests if you add new features or improvements.
 
 ## Acknowledgments
 
