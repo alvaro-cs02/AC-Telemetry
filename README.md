@@ -67,6 +67,7 @@ Navigate to `params_template.py` inside the `commons` directory and change the f
 APP_DIR = Path("YOUR PATH TO THE REPO")
 ```
 
+Then change the file name to `params.py`
 ### Running the App
 
 To run the application, use:
