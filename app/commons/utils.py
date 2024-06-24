@@ -221,6 +221,10 @@ def collect_telemetry(profile_name, interval=0.2, file_name='telemetry.csv', met
     filename = LOG_DIR / file_name
     columns = profiles
 
+    # Read car and map metadata from shared memory
+    car = sim_info.static.carModel
+    map_name = sim_info.static.track
+
     logging_active = False
 
     with open(filename, mode='w', newline='') as file:
@@ -229,8 +233,8 @@ def collect_telemetry(profile_name, interval=0.2, file_name='telemetry.csv', met
         if metadata:
             # Write metadata as comments at the top of the file
             file.write(f"# Name: {metadata.get('name', '')}\n")
-            file.write(f"# Car: {metadata.get('car', '')}\n")
-            file.write(f"# Map: {metadata.get('map', '')}\n")
+            file.write(f"# Car: {car}\n")
+            file.write(f"# Map: {map_name}\n")
         
         writer.writeheader()
 

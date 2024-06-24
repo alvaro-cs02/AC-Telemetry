@@ -87,8 +87,6 @@ layout = html.Div([
             dbc.Col([
                 html.H5("Metadata"),
                 dcc.Input(id='metadata-name', type='text', placeholder='Driver name', className="mb-2"),
-                dcc.Input(id='metadata-car', type='text', placeholder='Car', className="mb-2"),
-                dcc.Input(id='metadata-map', type='text', placeholder='Map', className="mb-2"),
                 dcc.Input(id='file-name', type='text', placeholder='File Name', className="mb-2"),
             ])
         ]),
@@ -102,3 +100,4 @@ layout = html.Div([
         )
     ], className="mt-5")
 ])
+

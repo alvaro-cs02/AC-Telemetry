@@ -1,21 +1,51 @@
 default:
-  logging_interval: 0.4
+  logging_interval: 0.2
 profiles:
   racer:
+  - currentTime
+  - lastTime
+  - bestTime
+  - completedLaps
   - position
   - iCurrentTime
   - iLastTime
   - iBestTime
-  - completedLaps
+  - gas
+  - brake
+  - gear
+  - rpms
+  - speedKmh
+  - airTemp
+  - roadTemp
+  - clutch
+  - accG
+  - fuel
+  test1:
   - currentTime
   - lastTime
   - bestTime
-  - fuel
-  - gear
-  - rpms
+  - completedLaps
+  - position
+  - iCurrentTime
+  - iLastTime
+  - iBestTime
   - brake
-  - gas
-  - clutch
   - airTemp
   - roadTemp
-  - speedKmh
+  - clutch
+  - accG
+  test2:
+  - currentTime
+  - lastTime
+  - bestTime
+  - completedLaps
+  - position
+  - iCurrentTime
+  - iLastTime
+  - iBestTime
+  - brake
+  - airTemp
+  - roadTemp
+  - clutch
+  - accG
+  - fuel

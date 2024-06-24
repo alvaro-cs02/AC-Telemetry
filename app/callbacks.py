@@ -32,11 +32,9 @@ initial_profile = get_initial_profile()
     State('new-profile-name', 'value'),
     State('active-profile-dropdown', 'value'),
     State('metadata-name', 'value'),
-    State('metadata-car', 'value'),
-    State('metadata-map', 'value'),
     State('file-name', 'value')
 )
-def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, start_telemetry_clicks, graphic_vars, physics_vars, static_vars, logging_interval, new_profile_name, active_profile, metadata_name, metadata_car, metadata_map, file_name):
+def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, start_telemetry_clicks, graphic_vars, physics_vars, static_vars, logging_interval, new_profile_name, active_profile, metadata_name, file_name):
     ctx = callback_context
     triggered = [t['prop_id'] for t in ctx.triggered]
 
@@ -137,9 +135,7 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, sta
             full_file_name = f"telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
         metadata = {
-            "name": metadata_name,
-            "car": metadata_car,
-            "map": metadata_map
+            "name": metadata_name
         }
 
         thread = threading.Thread(target=collect_telemetry, args=(active_profile, logging_interval, full_file_name, metadata))

@@ -17,7 +17,5 @@ initial_profile = list(config['profiles'].keys())[0]
 def get_config():
     return config
 
-
-
 def get_initial_profile():
     return initial_profile
