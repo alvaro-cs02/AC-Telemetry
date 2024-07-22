@@ -1,6 +1,27 @@
 default:
   logging_interval: 0.2
 profiles:
+  prueba:
+  - currentTime
+  - lastTime
+  - bestTime
+  - completedLaps
+  - position
+  - iCurrentTime
+  - iLastTime
+  - iBestTime
+  - mandatoryPitDone
+  - windSpeed
+  - gas
+  - brake
+  - fuel
+  - gear
+  - rpms
+  - speedKmh
+  - accG
+  - airTemp
+  - roadTemp
+  - clutch
   racer:
   - currentTime
   - lastTime
@@ -10,16 +31,18 @@ profiles:
   - iCurrentTime
   - iLastTime
   - iBestTime
+  - mandatoryPitDone
+  - windSpeed
   - gas
   - brake
+  - fuel
   - gear
   - rpms
   - speedKmh
+  - accG
   - airTemp
   - roadTemp
   - clutch
-  - accG
-  - fuel
   test1:
   - currentTime
   - lastTime
