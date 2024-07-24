@@ -6,6 +6,7 @@ from app import app, get_config, get_initial_profile, get_telemetry_files
 from commons.utils import collect_telemetry
 from commons.params import CONFIG_FILE, TELEMETRY_VARIABLES, LOG_DIR
 from datetime import datetime
+from plotly.subplots import make_subplots
 import os
 from dash.exceptions import PreventUpdate
 from dash import html
@@ -241,13 +242,30 @@ def update_dashboard(n_clicks, selected_file):
         print(f"Error parsing file: {e}")
         return html.H4(f"Error parsing file: {file_path}", className="text-center mt-4")
     
-    required_columns = ['timestamp', 'speedKmh', 'rpms', 'gear']
-    if not all(column in data.columns for column in required_columns):
+    required_columns = ['timestamp', 'speedKmh', 'rpms', 'gear', 'brake', 'gas']
+    available_columns = [column for column in required_columns if column in data.columns]
+    if not available_columns:
         return html.H4("Required data not found in file", className="text-center mt-4")
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=data['timestamp'], y=data['speedKmh'], mode='lines', name='Speed'))
-    fig.add_trace(go.Scatter(x=data['timestamp'], y=data['rpms'], mode='lines', name='RPMs'))
-    fig.add_trace(go.Scatter(x=data['timestamp'], y=data['gear'], mode='lines', name='Gear'))
-    fig.update_layout(title=f"Data for {selected_file}", xaxis_title='Time', yaxis_title='Value', legend_title='Metric')
+    # Create subplots
+    fig = make_subplots(
+        rows=3, cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.1,
+        subplot_titles=("Speed", "RPMs", "Brake and Gas")
+    )
+
+    # Add traces
+    if 'speedKmh' in available_columns:
+        fig.add_trace(go.Scatter(x=data['timestamp'], y=data['speedKmh'], mode='lines', name='Speed'), row=1, col=1)
+    
+    if 'rpms' in available_columns:
+        fig.add_trace(go.Scatter(x=data['timestamp'], y=data['rpms'], mode='lines', name='RPMs'), row=2, col=1)
+
+    if 'brake' in available_columns and 'gas' in available_columns:
+        fig.add_trace(go.Scatter(x=data['timestamp'], y=data['brake'], mode='lines', name='Brake'), row=3, col=1)
+        fig.add_trace(go.Scatter(x=data['timestamp'], y=data['gas'], mode='lines', name='Gas'), row=3, col=1)
+    
+    fig.update_layout(height=800, title_text=f"Data for {selected_file}")
+
     return dcc.Graph(id='telemetry-plot', figure=fig)

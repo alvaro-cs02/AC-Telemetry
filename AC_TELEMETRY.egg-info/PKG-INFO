@@ -1,5 +1,5 @@
 Metadata-Version: 2.1
-Name: AC-TELEMETRY
+Name: AC_TELEMETRY
 Version: 0.1.0
 Requires-Dist: dash
 Requires-Dist: dash-bootstrap-components
