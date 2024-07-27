@@ -8,6 +8,7 @@ config = get_config()
 initial_profile = get_initial_profile()
 
 main_layout = html.Div([
+    dcc.Store(id='telemetry-active', data=False),  # Store to track telemetry state
     dbc.Container([
         dbc.Row([
             dbc.Col(html.H1("Telemetry Profile Manager"), className="text-center mt-4 mb-4")
@@ -90,7 +91,8 @@ main_layout = html.Div([
                                     clearable=False,
                                     className="mb-2 w-100"
                                 ),
-                                dbc.Button("Start Telemetry", id='start-telemetry', color="success", className="mt-2 w-100")
+                                dbc.Button("Start Telemetry", id='start-telemetry', color="success", className="mt-2 w-100"),
+                                dbc.Button("Stop Telemetry", id='stop-telemetry', color="danger", className="mt-2 w-100", style={'display': 'none'})
                             ], width=6)
                         ]),
                         html.H5("Metadata", className="mt-4"),
@@ -115,6 +117,9 @@ main_layout = html.Div([
 ])
 
 visualization_layout = html.Div([
+    dcc.Store(id='telemetry-active', data=False),
+    dcc.Store(id='selected-file', storage_type='memory'),
+    dcc.Store(id='file-loaded', data=False),
     dbc.Container([
         dbc.Row([
             dbc.Col(html.H1("Telemetry Data Visualization"), className="text-center mt-4 mb-4")
@@ -133,16 +138,41 @@ visualization_layout = html.Div([
                             ],
                             style={'overflowY': 'scroll', 'maxHeight': 'calc(100vh - 200px)'}
                         ),
-                        dbc.Button("Load Data", id='load-data', color="primary", className="mt-2 w-100", n_clicks=0),
-                        dcc.Store(id='selected-file', storage_type='memory')
+                        dbc.Button("Load Data", id='load-data', color="primary", className="mt-2 w-100", n_clicks=0)
                     ])
                 ], className="mb-4", style={'height': '100vh'})
             ], width=2),
             dbc.Col([
-                # Placeholder for the dashboard
-                html.Div(id='dashboard', children=[
-                    html.H4("Dashboard will be here", className="text-center mt-4")
-                ])
+                dbc.Card([
+                    dbc.CardBody([
+                        html.Div(id='dashboard-options', style={'display': 'none'}, children=[
+                            html.H4("Data Range and Display Options", className="card-title"),
+                            dbc.Row([
+                                dbc.Col([
+                                    dbc.Label("Start Range (m)"),
+                                    dcc.Input(id='start-range', type='number', placeholder='Start (m)', min=0, className="mb-2 w-100"),
+                                ], width=6),
+                                dbc.Col([
+                                    dbc.Label("End Range (m)"),
+                                    dcc.Input(id='end-range', type='number', placeholder='End (m)', min=0, className="mb-2 w-100"),
+                                ], width=6)
+                            ]),
+                            dbc.Checklist(
+                                id='display-options',
+                                options=[
+                                    {'label': 'Show All Laps', 'value': 'all_laps'},
+                                    {'label': 'Show Average', 'value': 'average'}
+                                ],
+                                value=['all_laps'],  # Default option
+                                inline=True
+                            ),
+                            dbc.Button("Apply Filters", id='apply-filters', color="primary", className="mt-2 w-100", n_clicks=0)
+                        ]),
+                        html.Div(id='dashboard', children=[
+                            html.H4("Dashboard will be here", className="text-center mt-4")
+                        ])
+                    ])
+                ], className="mb-4")
             ], width=10)
         ])
     ], fluid=True)

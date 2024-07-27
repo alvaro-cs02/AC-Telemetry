@@ -142,8 +142,6 @@ class StaticInfo(ctypes.Structure):
         ('suspensionMaxTravel', c_float * 4),
         ('tyreRadius', c_float * 4),
         ('maxTurboBoost', c_float),
-        ('deprecated_1', c_float),
-        ('deprecated_2', c_float),
         ('penaltiesEnabled', c_int32),
         ('aidFuelRate', c_float),
         ('aidTireRate', c_float),
@@ -221,32 +219,42 @@ def collect_telemetry(profile_name, interval=0.2, file_name='telemetry.csv', met
     filename = LOG_DIR / file_name
     columns = profiles
 
-    # Read car and map metadata from shared memory
-    car = sim_info.static.carModel
-    map_name = sim_info.static.track
-
+    # Variables to ensure metadata and header are logged once
+    metadata_logged = False
     logging_active = False
 
     with open(filename, mode='w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=['timestamp'] + columns)
         
-        if metadata:
-            # Write metadata as comments at the top of the file
-            file.write(f"# Name: {metadata.get('name', '')}\n")
-            file.write(f"# Car: {car}\n")
-            file.write(f"# Map: {map_name}\n")
-        
-        writer.writeheader()
-
         while True:
             game_status = sim_info.graphics.status
             pit = sim_info.graphics.isInPit 
 
             if game_status == 2:
                 if pit == 0 and not logging_active:
-                    print("Race started, starting telemetry logging.")
-                    logging_active = True
+                    if not metadata_logged:
+                        # Attempt to retrieve the track length
+                        try:
+                            track_length = sim_info.static.trackSPlineLength
+                            print(f"Track Length: {track_length}")
+                        except AttributeError:
+                            track_length = None
+                            print("Error: trackSPlineLength not found or unavailable.")
+                        car = sim_info.static.carModel
+                        track_name = sim_info.static.track
+                        file.write(f"# Name: {metadata.get('name', '')}\n" if metadata else "# Name: Unknown\n")
+                        file.write(f"# Car: {car}\n")
+                        file.write(f"# Track: {track_name}\n")
+                        metadata_logged = True
+                        print("Race started, metadata logged.")
 
+                        # Write the header after metadata
+                        writer.writeheader()
+                        print("Header written.")
+                    
+                    logging_active = True
+                    print("Telemetry logging started.")
+                
                 if logging_active:
                     data = collect_data(sim_info, columns)
                     writer.writerow(data)
@@ -256,4 +264,5 @@ def collect_telemetry(profile_name, interval=0.2, file_name='telemetry.csv', met
                     logging_active = False
 
             time.sleep(interval)
+
 

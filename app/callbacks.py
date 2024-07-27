@@ -1,13 +1,14 @@
-from dash import Input, Output, State, callback_context, ALL, MATCH, callback_context
+from dash import Input, Output, State, callback_context, ALL
 import yaml
 import threading
 import plotly.graph_objects as go
 from app import app, get_config, get_initial_profile, get_telemetry_files
 from commons.utils import collect_telemetry
+from plotly.subplots import make_subplots
 from commons.params import CONFIG_FILE, TELEMETRY_VARIABLES, LOG_DIR
 from datetime import datetime
-from plotly.subplots import make_subplots
 import os
+import re
 from dash.exceptions import PreventUpdate
 from dash import html
 import dash_bootstrap_components as dbc
@@ -19,6 +20,11 @@ import json
 config = get_config()
 initial_profile = get_initial_profile()
 
+def stop_telemetry():
+    global telemetry_active
+    telemetry_active = False
+    print("Telemetry stopped")
+
 @app.callback(
     Output('profile-dropdown', 'options'),
     Output('profile-dropdown', 'value'),
@@ -27,33 +33,27 @@ initial_profile = get_initial_profile()
     Output('variables-checklist-physics', 'value'),
     Output('variables-checklist-static', 'value'),
     Output('new-profile-name', 'style'),
-    Output('notification', 'is_open'),
-    Output('notification', 'children'),
     Output('active-profile-dropdown', 'options'),
     Input('profile-dropdown', 'value'),
     Input('save-changes', 'n_clicks'),
     Input('add-profile', 'n_clicks'),
     Input('update-interval', 'n_clicks'),
-    Input('start-telemetry', 'n_clicks'),
     State('variables-checklist-graphic', 'value'),
     State('variables-checklist-physics', 'value'),
     State('variables-checklist-static', 'value'),
     State('logging-interval', 'value'),
     State('new-profile-name', 'value'),
-    State('active-profile-dropdown', 'value'),
     State('metadata-name', 'value'),
     State('file-name', 'value')
 )
-def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, start_telemetry_clicks, graphic_vars, physics_vars, static_vars, logging_interval, new_profile_name, active_profile, metadata_name, file_name):
+def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, graphic_vars, physics_vars, static_vars, logging_interval, new_profile_name, metadata_name, file_name):
     ctx = callback_context
     triggered = [t['prop_id'] for t in ctx.triggered]
 
-    # Initialize notification message
     notification_message = ""
     notification_open = False
 
     if 'profile-dropdown.value' in triggered:
-        # Update profile settings
         if profile in config['profiles']:
             variables = config['profiles'][profile]
             graphic_vars = [var for var in variables if var in [v['name'] for v in TELEMETRY_VARIABLES['graphic_info']['variables']]]
@@ -68,13 +68,10 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, sta
             physics_vars,
             static_vars,
             {'display': 'none'},
-            notification_open,
-            notification_message,
             [{'label': k, 'value': k} for k in config['profiles'].keys()]
         )
 
     if 'save-changes.n_clicks' in triggered:
-        # Save changes to the selected profile
         config['profiles'][profile] = graphic_vars + physics_vars + static_vars
 
         with open(CONFIG_FILE, 'w') as file:
@@ -84,7 +81,6 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, sta
         notification_open = True
 
     if 'update-interval.n_clicks' in triggered:
-        # Update logging interval
         config['default']['logging_interval'] = logging_interval
 
         with open(CONFIG_FILE, 'w') as file:
@@ -94,7 +90,6 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, sta
         notification_open = True
 
     if 'add-profile.n_clicks' in triggered:
-        # Show input for new profile name
         return (
             [{'label': k, 'value': k} for k in config['profiles'].keys()],
             profile,
@@ -103,13 +98,10 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, sta
             physics_vars,
             static_vars,
             {'display': 'block', 'margin-top': '10px'},
-            notification_open,
-            notification_message,
             [{'label': k, 'value': k} for k in config['profiles'].keys()]
         )
 
     if new_profile_name and 'save-changes.n_clicks' in triggered:
-        # Add new profile
         if new_profile_name in config['profiles']:
             notification_message = "Profile already exists!"
             notification_open = True
@@ -131,29 +123,9 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, sta
             physics_vars,
             static_vars,
             {'display': 'none'},
-            notification_open,
-            notification_message,
             [{'label': k, 'value': k} for k in config['profiles'].keys()]
         )
 
-    if 'start-telemetry.n_clicks' in triggered:
-        # Start telemetry collection in a separate thread
-        if file_name:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            full_file_name = f"{file_name}_{timestamp}.csv"
-        else:
-            full_file_name = f"telemetry_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-
-        metadata = {
-            "name": metadata_name
-        }
-
-        thread = threading.Thread(target=collect_telemetry, args=(active_profile, logging_interval, full_file_name, metadata))
-        thread.start()
-        notification_message = f"Started telemetry collection for profile '{active_profile}' with interval {logging_interval}."
-        notification_open = True
-
-    # Default return
     return (
         [{'label': k, 'value': k} for k in config['profiles'].keys()],
         profile,
@@ -162,9 +134,58 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, sta
         physics_vars,
         static_vars,
         {'display': 'none'},
-        notification_open,
-        notification_message,
         [{'label': k, 'value': k} for k in config['profiles'].keys()]
+    )
+
+@app.callback(
+    Output('start-telemetry', 'style'),
+    Output('stop-telemetry', 'style'),
+    Output('telemetry-active', 'data'),
+    Output('notification', 'is_open'),
+    Output('notification', 'children'),
+    Input('start-telemetry', 'n_clicks'),
+    Input('stop-telemetry', 'n_clicks'),
+    State('active-profile-dropdown', 'value'),
+    State('logging-interval', 'value'),
+    State('metadata-name', 'value'),
+    State('file-name', 'value'),
+    State('telemetry-active', 'data')
+)
+def toggle_telemetry(start_clicks, stop_clicks, active_profile, logging_interval, metadata_name, file_name, telemetry_active):
+    ctx = callback_context
+    triggered = [t['prop_id'] for t in ctx.triggered]
+    notification_message = ""
+    notification_open = False
+
+    if 'start-telemetry.n_clicks' in triggered:
+        if telemetry_active:
+            notification_message = "Telemetry is already running!"
+        else:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            full_file_name = f"{file_name}_{timestamp}.csv" if file_name else f"telemetry_{timestamp}.csv"
+            metadata = {"name": metadata_name}
+
+            thread = threading.Thread(target=collect_telemetry, args=(active_profile, logging_interval, full_file_name, metadata))
+            thread.start()
+            telemetry_active = True
+            notification_message = f"Started telemetry collection for profile '{active_profile}' with interval {logging_interval}."
+            notification_open = True
+
+    elif 'stop-telemetry.n_clicks' in triggered:
+        if not telemetry_active:
+            notification_message = "Telemetry is not running!"
+        else:
+            stop_telemetry()
+            telemetry_active = False
+            notification_message = "Telemetry stopped."
+            notification_open = True
+
+    return (
+        {'display': 'none'} if telemetry_active else {'display': 'block'},
+        {'display': 'block'} if telemetry_active else {'display': 'none'},
+        telemetry_active,
+        notification_open,
+        notification_message
     )
 
 @app.callback(
@@ -184,8 +205,7 @@ def update_file_list(search_value, selected_file):
         )
         for file in files
     ]
-    
-import re
+
 @app.callback(
     Output('selected-file', 'data'),
     [Input({'type': 'file-item', 'index': ALL}, 'n_clicks')],
@@ -194,19 +214,12 @@ import re
 def store_selected_file(n_clicks, file_ids):
     ctx = dash.callback_context
     if not ctx.triggered:
-        return None  # No file has been clicked yet, do nothing.
-
-    clicked_id_str = ctx.triggered[0]['prop_id'].split('.')[0]  # Get the string ID from prop_id.
-
-    # Print the clicked_id_str to understand its format
+        return None
+    clicked_id_str = ctx.triggered[0]['prop_id'].split('.')[0]
     print("Clicked ID String:", clicked_id_str)
-    
-    # Ensure the clicked_id_str is properly closed
     if not clicked_id_str.endswith('"}'):
         clicked_id_str += '"}'
-    
     try:
-        # Extract the index using regex
         match = re.search(r'index":"(.+?)"', clicked_id_str)
         if match:
             clicked_index = match.group(1)
@@ -214,58 +227,87 @@ def store_selected_file(n_clicks, file_ids):
                 clicked_index += '.csv'
             print("Clicked File Index:", clicked_index)
             return clicked_index
-        else:
-            print("No match found for clicked ID")
-            return None
     except Exception as e:
         print(f"Error parsing clicked_id_str: {e}")
         return None
-
+    
 @app.callback(
     Output('dashboard', 'children'),
-    [Input('load-data', 'n_clicks')],
-    [State('selected-file', 'data')]
+    Output('dashboard-options', 'style'),
+    Output('file-loaded', 'data'),
+    Input('load-data', 'n_clicks'),
+    Input('apply-filters', 'n_clicks'),
+    State('selected-file', 'data'),
+    State('start-range', 'value'),
+    State('end-range', 'value'),
+    State('display-options', 'value')
 )
-def update_dashboard(n_clicks, selected_file):
-    if n_clicks is None or selected_file is None:
-        return html.H4("No file selected or click not registered", className="text-center mt-4")
+def update_dashboard(load_clicks, apply_clicks, selected_file, start_range, end_range, display_options):
+    if not selected_file:
+        return html.H4("No file selected or click not registered", className="text-center mt-4"), {'display': 'none'}, False
+
+    ctx = callback_context
+    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    if triggered_id == 'load-data' and load_clicks == 0:
+        return html.H4("No file selected or click not registered", className="text-center mt-4"), {'display': 'none'}, False
 
     file_path = os.path.join(LOG_DIR, selected_file)
-    print("Loading file from path:", file_path)
     if not os.path.exists(file_path):
-        return html.H4(f"File not found: {file_path}", className="text-center mt-4")
+        return html.H4(f"File not found: {file_path}", className="text-center mt-4"), {'display': 'none'}, False
+
+    # Initialize variables
+    track_length = None
+    data = None
 
     try:
-        # Skip initial comment lines (lines starting with '#')
+        # Read the file and extract metadata
+        with open(file_path, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                if line.startswith('#'):
+                    # Extract trackSPlineLenght from the metadata
+                    match = re.search(r'# Lenght: (\d+)', line)
+                    if match:
+                        track_length = int(match.group(1))
+                else:
+                    break
+        
+        # Load the data, skipping the comment lines
         data = pd.read_csv(file_path, comment='#')
-    except pd.errors.ParserError as e:
-        print(f"Error parsing file: {e}")
-        return html.H4(f"Error parsing file: {file_path}", className="text-center mt-4")
+
+    except Exception as e:
+        print(f"Error processing file: {e}")
+        return html.H4(f"Error processing file: {file_path}", className="text-center mt-4"), {'display': 'none'}, False
     
-    required_columns = ['timestamp', 'speedKmh', 'rpms', 'gear', 'brake', 'gas']
-    available_columns = [column for column in required_columns if column in data.columns]
-    if not available_columns:
-        return html.H4("Required data not found in file", className="text-center mt-4")
+    if track_length is None or 'normalizedCarPosition' not in data.columns:
+        return html.H4("Required data not found in file", className="text-center mt-4"), {'display': 'none'}, False
+
+    # Filter data by range if applicable
+    if start_range is not None and end_range is not None:
+        start_norm = start_range / track_length
+        end_norm = end_range / track_length
+        data = data[(data['normalizedCarPosition'] >= start_norm) & (data['normalizedCarPosition'] <= end_norm)]
 
     # Create subplots
     fig = make_subplots(
-        rows=3, cols=1,
+        rows=2, cols=1,
         shared_xaxes=True,
         vertical_spacing=0.1,
-        subplot_titles=("Speed", "RPMs", "Brake and Gas")
+        subplot_titles=("Speed", "Brake and Gas")
     )
 
-    # Add traces
-    if 'speedKmh' in available_columns:
-        fig.add_trace(go.Scatter(x=data['timestamp'], y=data['speedKmh'], mode='lines', name='Speed'), row=1, col=1)
+    if 'all_laps' in display_options:
+        for lap in data['completedLaps'].unique():
+            lap_data = data[data['completedLaps'] == lap]
+            fig.add_trace(go.Scatter(x=lap_data['timestamp'], y=lap_data['speedKmh'], mode='lines', name=f'Speed Lap {lap}'), row=1, col=1)
+            fig.add_trace(go.Scatter(x=lap_data['timestamp'], y=lap_data['brake'], mode='lines', name=f'Brake Lap {lap}'), row=2, col=1)
+            fig.add_trace(go.Scatter(x=lap_data['timestamp'], y=lap_data['gas'], mode='lines', name=f'Gas Lap {lap}'), row=2, col=1)
     
-    if 'rpms' in available_columns:
-        fig.add_trace(go.Scatter(x=data['timestamp'], y=data['rpms'], mode='lines', name='RPMs'), row=2, col=1)
-
-    if 'brake' in available_columns and 'gas' in available_columns:
-        fig.add_trace(go.Scatter(x=data['timestamp'], y=data['brake'], mode='lines', name='Brake'), row=3, col=1)
-        fig.add_trace(go.Scatter(x=data['timestamp'], y=data['gas'], mode='lines', name='Gas'), row=3, col=1)
+    if 'average' in display_options:
+        avg_data = data.groupby(data['timestamp'].dt.floor('S')).mean()  # Group by seconds and calculate mean
+        fig.add_trace(go.Scatter(x=avg_data.index, y=avg_data['speedKmh'], mode='lines', name='Average Speed'), row=1, col=1)
+        fig.add_trace(go.Scatter(x=avg_data.index, y=avg_data['brake'], mode='lines', name='Average Brake'), row=2, col=1)
+        fig.add_trace(go.Scatter(x=avg_data.index, y=avg_data['gas'], mode='lines', name='Average Gas'), row=2, col=1)
     
-    fig.update_layout(height=800, title_text=f"Data for {selected_file}")
-
-    return dcc.Graph(id='telemetry-plot', figure=fig)
+    fig.update_layout(height=800, title_text=f"Data for {selected_file}", xaxis_title='Time', yaxis_title='Value', legend_title='Metric')
+    return dcc.Graph(id='telemetry-plot', figure=fig), {'display': 'block'}, True

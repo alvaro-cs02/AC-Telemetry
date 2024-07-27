@@ -1,6 +1,26 @@
 default:
-  logging_interval: 0.2
+  logging_interval: 0.1
 profiles:
+  alvaro_casa:
+  - currentTime
+  - completedLaps
+  - status
+  - lastTime
+  - bestTime
+  - distanceTraveled
+  - normalizedCarPosition
+  - carCoordinates
+  - gas
+  - brake
+  - fuel
+  - gear
+  - rpms
+  - speedKmh
+  - steerAngle
+  - track
+  - carModel
+  - sectorCount
+  - trackSPlineLength
   prueba:
   - currentTime
   - lastTime
@@ -24,15 +44,13 @@ profiles:
   - clutch
   racer:
   - currentTime
+  - completedLaps
+  - status
   - lastTime
   - bestTime
-  - completedLaps
-  - position
-  - iCurrentTime
-  - iLastTime
-  - iBestTime
-  - mandatoryPitDone
-  - windSpeed
+  - distanceTraveled
+  - normalizedCarPosition
+  - carCoordinates
   - gas
   - brake
   - fuel
@@ -40,9 +58,10 @@ profiles:
   - rpms
   - speedKmh
   - accG
-  - airTemp
-  - roadTemp
-  - clutch
+  - steerAngle
+  - track
+  - carModel
+  - sectorCount
   test1:
   - currentTime
   - lastTime

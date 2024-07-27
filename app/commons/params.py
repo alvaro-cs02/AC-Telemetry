@@ -148,8 +148,6 @@ TELEMETRY_VARIABLES = {
             {"name": "suspensionMaxTravel", "description": "Maximum suspension travel distance of each tire [Front Left, Front Right, Rear Left, Rear Right]"},
             {"name": "tyreRadius", "description": "Radius of each tire [Front Left, Front Right, Rear Left, Rear Right]"},
             {"name": "maxTurboBoost", "description": "Maximum turbo boost value of the player's car"},
-            {"name": "deprecated_1", "description": "Deprecated field (do not use)"},
-            {"name": "deprecated_2", "description": "Deprecated field (do not use)"},
             {"name": "penaltiesEnabled", "description": "Cut penalties enabled (1: True, 0: False)"},
             {"name": "aidFuelRate", "description": "Fuel consumption rate (0: No consumption, 1: Normal, 2: Double consumption)"},
             {"name": "aidTireRate", "description": "Tire wear rate (0: No wear, 1: Normal, 2: Double wear)"},
