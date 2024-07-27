@@ -1,15 +1,12 @@
 import mmap
-#import functools
 import ctypes
 import csv
 import time
 from datetime import datetime
-import json
-from datetime import datetime
+import threading
 from commons.params import *
 from ctypes import c_int32, c_float, c_wchar
 import yaml
-import json
 
 def load_config():
     with open(CONFIG_FILE, 'r') as file:
@@ -207,7 +204,12 @@ def collect_data(sim_info, columns):
         data[column] = attribute
     return data
 
+stop_event = threading.Event()
+
 def collect_telemetry(profile_name, interval=0.2, file_name='telemetry.csv', metadata=None):
+    global stop_event
+    stop_event.clear()  # Clear any previous stop event
+
     config = load_config()
     try:
         profiles = config['profiles'][profile_name]
@@ -226,7 +228,7 @@ def collect_telemetry(profile_name, interval=0.2, file_name='telemetry.csv', met
     with open(filename, mode='w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=['timestamp'] + columns)
         
-        while True:
+        while not stop_event.is_set():  # Loop until stop_event is set
             game_status = sim_info.graphics.status
             pit = sim_info.graphics.isInPit 
 
@@ -245,6 +247,7 @@ def collect_telemetry(profile_name, interval=0.2, file_name='telemetry.csv', met
                         file.write(f"# Name: {metadata.get('name', '')}\n" if metadata else "# Name: Unknown\n")
                         file.write(f"# Car: {car}\n")
                         file.write(f"# Track: {track_name}\n")
+                        file.write(f"# trackSPlineLength: {track_length}\n" if track_length else "# trackSPlineLength: Unknown\n")
                         metadata_logged = True
                         print("Race started, metadata logged.")
 
@@ -264,5 +267,7 @@ def collect_telemetry(profile_name, interval=0.2, file_name='telemetry.csv', met
                     logging_active = False
 
             time.sleep(interval)
+
+    print("Telemetry logging ended.")
 
 

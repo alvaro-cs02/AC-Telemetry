@@ -21,8 +21,8 @@ config = get_config()
 initial_profile = get_initial_profile()
 
 def stop_telemetry():
-    global telemetry_active
-    telemetry_active = False
+    global stop_event
+    stop_event.set()  # Set the event to stop the thread
     print("Telemetry stopped")
 
 @app.callback(
@@ -152,6 +152,7 @@ def update_profile(profile, save_clicks, add_clicks, update_interval_clicks, gra
     State('telemetry-active', 'data')
 )
 def toggle_telemetry(start_clicks, stop_clicks, active_profile, logging_interval, metadata_name, file_name, telemetry_active):
+    global stop_event
     ctx = callback_context
     triggered = [t['prop_id'] for t in ctx.triggered]
     notification_message = ""
@@ -161,10 +162,15 @@ def toggle_telemetry(start_clicks, stop_clicks, active_profile, logging_interval
         if telemetry_active:
             notification_message = "Telemetry is already running!"
         else:
+            # Stop any existing telemetry thread before starting a new one
+            stop_event.set()
+            telemetry_active = False
+
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             full_file_name = f"{file_name}_{timestamp}.csv" if file_name else f"telemetry_{timestamp}.csv"
             metadata = {"name": metadata_name}
 
+            stop_event = threading.Event()  # Reset the stop event for the new thread
             thread = threading.Thread(target=collect_telemetry, args=(active_profile, logging_interval, full_file_name, metadata))
             thread.start()
             telemetry_active = True
@@ -187,6 +193,7 @@ def toggle_telemetry(start_clicks, stop_clicks, active_profile, logging_interval
         notification_open,
         notification_message
     )
+
 
 @app.callback(
     Output('file-list', 'children'),
