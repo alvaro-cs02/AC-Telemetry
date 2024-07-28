@@ -206,10 +206,7 @@ def collect_data(sim_info, columns):
 
 stop_event = threading.Event()
 
-def collect_telemetry(profile_name, interval=0.2, file_name='telemetry.csv', metadata=None):
-    global stop_event
-    stop_event.clear()  # Clear any previous stop event
-
+def collect_telemetry(profile_name, interval, file_name, metadata, stop_event):
     config = load_config()
     try:
         profiles = config['profiles'][profile_name]
@@ -218,53 +215,50 @@ def collect_telemetry(profile_name, interval=0.2, file_name='telemetry.csv', met
         return
 
     sim_info = SimInfo()
-    filename = LOG_DIR / file_name
-    columns = profiles
+    columns = profiles + ['trackDistance']  # Add 'trackDistance' to the list of columns
 
     # Variables to ensure metadata and header are logged once
     metadata_logged = False
     logging_active = False
-
-    with open(filename, mode='w', newline='') as file:
+    track_length = None
+    file_name = LOG_DIR / file_name
+    with open(file_name, mode='w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=['timestamp'] + columns)
-        
+
         while not stop_event.is_set():  # Loop until stop_event is set
             game_status = sim_info.graphics.status
             pit = sim_info.graphics.isInPit 
 
-            if game_status == 2:
-                if pit == 0 and not logging_active:
-                    if not metadata_logged:
-                        # Attempt to retrieve the track length
-                        try:
-                            track_length = sim_info.static.trackSPlineLength
-                            print(f"Track Length: {track_length}")
-                        except AttributeError:
-                            track_length = None
-                            print("Error: trackSPlineLength not found or unavailable.")
-                        car = sim_info.static.carModel
-                        track_name = sim_info.static.track
-                        file.write(f"# Name: {metadata.get('name', '')}\n" if metadata else "# Name: Unknown\n")
-                        file.write(f"# Car: {car}\n")
-                        file.write(f"# Track: {track_name}\n")
-                        file.write(f"# trackSPlineLength: {track_length}\n" if track_length else "# trackSPlineLength: Unknown\n")
-                        metadata_logged = True
-                        print("Race started, metadata logged.")
+            if game_status == 2 and not pit:
+                if not metadata_logged:
+                    try:
+                        track_length = float(metadata.get('length', 0))
+                    except (ValueError, TypeError):
+                        track_length = None
+                    car = sim_info.static.carModel
+                    track_name = sim_info.static.track
+                    timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
+                    file.write(f"# Name: {metadata.get('name', '')}\n" if metadata else "# Name: Unknown\n")
+                    file.write(f"# Car: {car}\n")
+                    file.write(f"# Track: {track_name}\n")
+                    file.write(f"# Length: {track_length}\n")
+                    file.write(f"# Timestamp: {timestamp}\n")
+                    metadata_logged = True
+                    writer.writeheader()
 
-                        # Write the header after metadata
-                        writer.writeheader()
-                        print("Header written.")
-                    
-                    logging_active = True
-                    print("Telemetry logging started.")
+                data = collect_data(sim_info, columns)
                 
-                if logging_active:
-                    data = collect_data(sim_info, columns)
-                    writer.writerow(data)
-            else:
-                if logging_active:
-                    print("Race stopped or paused, stopping telemetry logging.")
-                    logging_active = False
+                # Calculate 'trackDistance' if 'normalizedCarPosition' is available and track length is known
+                if 'normalizedCarPosition' in data and track_length:
+                    try:
+                        normalized_pos = float(data['normalizedCarPosition'])
+                        data['trackDistance'] = normalized_pos * track_length
+                    except (ValueError, TypeError):
+                        data['trackDistance'] = None
+                else:
+                    data['trackDistance'] = None
+
+                writer.writerow(data)
 
             time.sleep(interval)
 

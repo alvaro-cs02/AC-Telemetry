@@ -97,6 +97,7 @@ main_layout = html.Div([
                         ]),
                         html.H5("Metadata", className="mt-4"),
                         dcc.Input(id='metadata-name', type='text', placeholder='Driver name', className="mb-2 w-100"),
+                        dcc.Input(id='metadata-length', type='number', placeholder='Track\'s length (m)', className="mb-2 w-100", min=0),
                         dcc.Input(id='file-name', type='text', placeholder='File Name', className="mb-2 w-100")
                     ])
                 ], className="mb-4")
