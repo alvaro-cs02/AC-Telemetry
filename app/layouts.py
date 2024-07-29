@@ -158,15 +158,6 @@ visualization_layout = html.Div([
                                     dcc.Input(id='end-range', type='number', placeholder='End (m)', min=0, className="mb-2 w-100"),
                                 ], width=6)
                             ]),
-                            dbc.Checklist(
-                                id='display-options',
-                                options=[
-                                    {'label': 'Show All Laps', 'value': 'all_laps'},
-                                    {'label': 'Show Average', 'value': 'average'}
-                                ],
-                                value=['all_laps'],  # Default option
-                                inline=True
-                            ),
                             dbc.Button("Apply Filters", id='apply-filters', color="primary", className="mt-2 w-100", n_clicks=0)
                         ]),
                         html.Div(id='dashboard', children=[

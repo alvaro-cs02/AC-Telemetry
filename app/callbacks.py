@@ -252,10 +252,9 @@ def store_selected_file(n_clicks, file_ids):
     Input('apply-filters', 'n_clicks'),
     State('selected-file', 'data'),
     State('start-range', 'value'),
-    State('end-range', 'value'),
-    State('display-options', 'value')
+    State('end-range', 'value')
 )
-def update_dashboard(load_clicks, apply_clicks, selected_file, start_range, end_range, display_options):
+def update_dashboard(load_clicks, apply_clicks, selected_file, start_range, end_range):
     if not selected_file:
         return html.H4("No file selected or click not registered", className="text-center mt-4"), {'display': 'none'}, False
 
@@ -268,24 +267,24 @@ def update_dashboard(load_clicks, apply_clicks, selected_file, start_range, end_
     if not os.path.exists(file_path):
         return html.H4(f"File not found: {file_path}", className="text-center mt-4"), {'display': 'none'}, False
 
-    # Initialize variables
+    # Inicializar variables
     track_length = None
     data = None
 
     try:
-        # Read the file and extract metadata
+        # Leer el archivo y extraer metadatos
         with open(file_path, 'r') as f:
             lines = f.readlines()
             for line in lines:
                 if line.startswith('#'):
-                    # Extract trackSPlineLenght from the metadata
-                    match = re.search(r'# Lenght: (\d+)', line)
+                    # Extraer trackLength de los metadatos
+                    match = re.search(r'# Length: (\d+)', line)
                     if match:
                         track_length = int(match.group(1))
                 else:
                     break
         
-        # Load the data, skipping the comment lines
+        # Cargar los datos, saltando las líneas de comentarios
         data = pd.read_csv(file_path, comment='#')
 
     except Exception as e:
@@ -295,13 +294,13 @@ def update_dashboard(load_clicks, apply_clicks, selected_file, start_range, end_
     if track_length is None or 'normalizedCarPosition' not in data.columns:
         return html.H4("Required data not found in file", className="text-center mt-4"), {'display': 'none'}, False
 
-    # Filter data by range if applicable
+    # Filtrar datos por rango si es aplicable
     if start_range is not None and end_range is not None:
         start_norm = start_range / track_length
         end_norm = end_range / track_length
         data = data[(data['normalizedCarPosition'] >= start_norm) & (data['normalizedCarPosition'] <= end_norm)]
 
-    # Create subplots
+    # Crear subgráficos
     fig = make_subplots(
         rows=2, cols=1,
         shared_xaxes=True,
@@ -309,18 +308,12 @@ def update_dashboard(load_clicks, apply_clicks, selected_file, start_range, end_
         subplot_titles=("Speed", "Brake and Gas")
     )
 
-    if 'all_laps' in display_options:
-        for lap in data['completedLaps'].unique():
-            lap_data = data[data['completedLaps'] == lap]
-            fig.add_trace(go.Scatter(x=lap_data['timestamp'], y=lap_data['speedKmh'], mode='lines', name=f'Speed Lap {lap}'), row=1, col=1)
-            fig.add_trace(go.Scatter(x=lap_data['timestamp'], y=lap_data['brake'], mode='lines', name=f'Brake Lap {lap}'), row=2, col=1)
-            fig.add_trace(go.Scatter(x=lap_data['timestamp'], y=lap_data['gas'], mode='lines', name=f'Gas Lap {lap}'), row=2, col=1)
-    
-    if 'average' in display_options:
-        avg_data = data.groupby(data['timestamp'].dt.floor('S')).mean()  # Group by seconds and calculate mean
-        fig.add_trace(go.Scatter(x=avg_data.index, y=avg_data['speedKmh'], mode='lines', name='Average Speed'), row=1, col=1)
-        fig.add_trace(go.Scatter(x=avg_data.index, y=avg_data['brake'], mode='lines', name='Average Brake'), row=2, col=1)
-        fig.add_trace(go.Scatter(x=avg_data.index, y=avg_data['gas'], mode='lines', name='Average Gas'), row=2, col=1)
+    # Añadir trazas para velocidad
+    fig.add_trace(go.Scatter(x=data['timestamp'], y=data['speedKmh'], mode='lines', name='Speed'), row=1, col=1)
+    # Añadir trazas para brake y gas
+    fig.add_trace(go.Scatter(x=data['timestamp'], y=data['brake'], mode='lines', name='Brake'), row=2, col=1)
+    fig.add_trace(go.Scatter(x=data['timestamp'], y=data['gas'], mode='lines', name='Gas'), row=2, col=1)
     
     fig.update_layout(height=800, title_text=f"Data for {selected_file}", xaxis_title='Time', yaxis_title='Value', legend_title='Metric')
     return dcc.Graph(id='telemetry-plot', figure=fig), {'display': 'block'}, True
+
