@@ -248,72 +248,93 @@ def store_selected_file(n_clicks, file_ids):
     Output('dashboard', 'children'),
     Output('dashboard-options', 'style'),
     Output('file-loaded', 'data'),
+    Output('average-speeds-content', 'children'),
     Input('load-data', 'n_clicks'),
     Input('apply-filters', 'n_clicks'),
-    State('selected-file', 'data'),
+    State('file-selector', 'value'),
     State('start-range', 'value'),
-    State('end-range', 'value')
+    State('end-range', 'value'),
+    State('x-axis-mode', 'value')
 )
-def update_dashboard(load_clicks, apply_clicks, selected_file, start_range, end_range):
-    if not selected_file:
-        return html.H4("No file selected or click not registered", className="text-center mt-4"), {'display': 'none'}, False
+def update_dashboard(load_clicks, apply_clicks, selected_files, start_range, end_range, x_axis_mode):
+    if not selected_files:
+        return html.H4("No files selected or click not registered", className="text-center mt-4"), {'display': 'none'}, False, ""
 
     ctx = callback_context
     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
     if triggered_id == 'load-data' and load_clicks == 0:
-        return html.H4("No file selected or click not registered", className="text-center mt-4"), {'display': 'none'}, False
+        return html.H4("No files selected or click not registered", className="text-center mt-4"), {'display': 'none'}, False, ""
 
-    file_path = os.path.join(LOG_DIR, selected_file)
-    if not os.path.exists(file_path):
-        return html.H4(f"File not found: {file_path}", className="text-center mt-4"), {'display': 'none'}, False
+    combined_data = []
+    avg_speeds_text = []
 
-    # Inicializar variables
-    track_length = None
-    data = None
+    for file_name in selected_files:
+        file_path = os.path.join(LOG_DIR, file_name)
+        if not os.path.exists(file_path):
+            continue
 
-    try:
-        # Leer el archivo y extraer metadatos
-        with open(file_path, 'r') as f:
-            lines = f.readlines()
-            for line in lines:
-                if line.startswith('#'):
-                    # Extraer trackLength de los metadatos
-                    match = re.search(r'# Length: (\d+)', line)
-                    if match:
-                        track_length = int(match.group(1))
-                else:
-                    break
-        
-        # Cargar los datos, saltando las líneas de comentarios
-        data = pd.read_csv(file_path, comment='#')
+        try:
+            # Read the file and extract metadata
+            with open(file_path, 'r') as f:
+                lines = f.readlines()
+                for line in lines:
+                    if line.startswith('#'):
+                        match = re.search(r'# Length: (\d+)', line)
+                        if match:
+                            track_length = int(match.group(1))
+                    else:
+                        break
+            
+            # Load the data, skipping the comment lines
+            data = pd.read_csv(file_path, comment='#')
+            if 'normalizedCarPosition' not in data.columns:
+                continue
 
-    except Exception as e:
-        print(f"Error processing file: {e}")
-        return html.H4(f"Error processing file: {file_path}", className="text-center mt-4"), {'display': 'none'}, False
-    
-    if track_length is None or 'normalizedCarPosition' not in data.columns:
-        return html.H4("Required data not found in file", className="text-center mt-4"), {'display': 'none'}, False
+            # Calculate the actual distance covered if applicable
+            if start_range is not None and end_range is not None:
+                start_norm = start_range / track_length
+                end_norm = end_range / track_length
+                data = data[(data['normalizedCarPosition'] >= start_norm) & (data['normalizedCarPosition'] <= end_norm)]
 
-    # Filtrar datos por rango si es aplicable
-    if start_range is not None and end_range is not None:
-        start_norm = start_range / track_length
-        end_norm = end_range / track_length
-        data = data[(data['normalizedCarPosition'] >= start_norm) & (data['normalizedCarPosition'] <= end_norm)]
+            # Normalize time (start from 0)
+            data['relative_time'] = (pd.to_datetime(data['timestamp']) - pd.to_datetime(data['timestamp'].iloc[0])).dt.total_seconds()
 
-    # Crear subgráficos
+            # Determine the X-axis mode and calculate values
+            if x_axis_mode == 'time':
+                data['x_axis'] = data['relative_time']
+                x_axis_label = 'Time (seconds)'
+            else:  # x_axis_mode == 'distance'
+                data['x_axis'] = data['normalizedCarPosition'] * track_length
+                x_axis_label = 'Distance (meters)'
+
+            combined_data.append((file_name, data))
+
+            # Calculate average speed and total time
+            avg_speed = data['speedKmh'].mean()
+            total_time = data['relative_time'].iloc[-1]
+            avg_speeds_text.append(html.Div(f"File: {file_name} - Average Speed: {avg_speed:.2f} km/h, Total Time: {total_time:.2f} s"))
+
+        except Exception as e:
+            print(f"Error processing file {file_name}: {e}")
+            continue
+
+    if not combined_data:
+        return html.H4("No valid data found in selected files.", className="text-center mt-4"), {'display': 'none'}, False, ""
+
+    # Create subplots
     fig = make_subplots(
-        rows=2, cols=1,
+        rows=3, cols=1,
         shared_xaxes=True,
         vertical_spacing=0.1,
-        subplot_titles=("Speed", "Brake and Gas")
+        subplot_titles=("Speed", "Gas pedal", "Brake pedal")
     )
 
-    # Añadir trazas para velocidad
-    fig.add_trace(go.Scatter(x=data['timestamp'], y=data['speedKmh'], mode='lines', name='Speed'), row=1, col=1)
-    # Añadir trazas para brake y gas
-    fig.add_trace(go.Scatter(x=data['timestamp'], y=data['brake'], mode='lines', name='Brake'), row=2, col=1)
-    fig.add_trace(go.Scatter(x=data['timestamp'], y=data['gas'], mode='lines', name='Gas'), row=2, col=1)
+    # Add data traces for each file
+    for file_name, data in combined_data:
+        fig.add_trace(go.Scatter(x=data['x_axis'], y=data['speedKmh'], mode='lines', name=f'Speed {file_name}'), row=1, col=1)
+        fig.add_trace(go.Scatter(x=data['x_axis'], y=data['gas'], mode='lines', name=f'Gas {file_name}'), row=2, col=1)
+        fig.add_trace(go.Scatter(x=data['x_axis'], y=data['brake'], mode='lines', name=f'Brake {file_name}'), row=3, col=1)
     
-    fig.update_layout(height=800, title_text=f"Data for {selected_file}", xaxis_title='Time', yaxis_title='Value', legend_title='Metric')
-    return dcc.Graph(id='telemetry-plot', figure=fig), {'display': 'block'}, True
+    fig.update_layout(height=800, title_text="Data from Selected Files", xaxis_title=x_axis_label, yaxis_title='Value', legend_title='Metric')
 
+    return dcc.Graph(id='telemetry-plot', figure=fig), {'display': 'block'}, True, avg_speeds_text

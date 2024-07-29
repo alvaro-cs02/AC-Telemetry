@@ -119,7 +119,7 @@ main_layout = html.Div([
 
 visualization_layout = html.Div([
     dcc.Store(id='telemetry-active', data=False),
-    dcc.Store(id='selected-file', storage_type='memory'),
+    dcc.Store(id='selected-files', storage_type='memory'),
     dcc.Store(id='file-loaded', data=False),
     dbc.Container([
         dbc.Row([
@@ -129,15 +129,13 @@ visualization_layout = html.Div([
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
-                        html.H4("Select Telemetry File", className="card-title"),
-                        dbc.Input(id="search-box", placeholder="Search by name or metadata...", type="text", className="mb-3"),
-                        dbc.ListGroup(
-                            id='file-list',
-                            children=[
-                                dbc.ListGroupItem(file['label'], id={'type': 'file-item', 'index': file['value']}, action=True)
-                                for file in get_telemetry_files()
-                            ],
-                            style={'overflowY': 'scroll', 'maxHeight': 'calc(100vh - 200px)'}
+                        html.H4("Select Telemetry Files", className="card-title"),
+                        dcc.Dropdown(
+                            id='file-selector',
+                            options=[{'label': file['label'], 'value': file['value']} for file in get_telemetry_files()],
+                            multi=True,
+                            placeholder="Select one or more files...",
+                            className="mb-3"
                         ),
                         dbc.Button("Load Data", id='load-data', color="primary", className="mt-2 w-100", n_clicks=0)
                     ])
@@ -158,10 +156,25 @@ visualization_layout = html.Div([
                                     dcc.Input(id='end-range', type='number', placeholder='End (m)', min=0, className="mb-2 w-100"),
                                 ], width=6)
                             ]),
+                            dbc.Label("X-Axis Mode"),
+                            dbc.RadioItems(
+                                id='x-axis-mode',
+                                options=[
+                                    {'label': 'By Time', 'value': 'time'},
+                                    {'label': 'By Distance', 'value': 'distance'}
+                                ],
+                                value='time',
+                                inline=True,
+                                className="mb-2"
+                            ),
                             dbc.Button("Apply Filters", id='apply-filters', color="primary", className="mt-2 w-100", n_clicks=0)
                         ]),
                         html.Div(id='dashboard', children=[
                             html.H4("Dashboard will be here", className="text-center mt-4")
+                        ]),
+                        html.Div(id='average-speeds', children=[
+                            html.H5("Average Speeds and Total Times", className="text-center mt-4"),
+                            html.Div(id='average-speeds-content')
                         ])
                     ])
                 ], className="mb-4")
