@@ -287,7 +287,7 @@ def update_dashboard(load_clicks, apply_clicks, selected_files, start_range, end
             
             # Load the data, skipping the comment lines
             data = pd.read_csv(file_path, comment='#')
-            if 'normalizedCarPosition' not in data.columns:
+            if 'normalizedCarPosition' not in data.columns or 'completedLaps' not in data.columns:
                 continue
 
             # Calculate the actual distance covered if applicable
@@ -301,15 +301,26 @@ def update_dashboard(load_clicks, apply_clicks, selected_files, start_range, end
 
             # Determine the X-axis mode and calculate values
             if x_axis_mode == 'time':
-                data['x_axis'] = data['relative_time']
                 x_axis_label = 'Time (seconds)'
             else:  # x_axis_mode == 'distance'
                 data['x_axis'] = data['normalizedCarPosition'] * track_length
                 x_axis_label = 'Distance (meters)'
 
-            combined_data.append((file_name, data))
+            # Check for laps
+            if data['completedLaps'].max() > 0:
+                lap_data = []
+                max_lap = data['completedLaps'].max()
+                for lap in range(max_lap + 1):
+                    lap_df = data[data['completedLaps'] == lap].copy()
+                    lap_df['relative_time'] = lap_df['relative_time'] - lap_df['relative_time'].iloc[0]  # Reset relative time for each lap
+                    if x_axis_mode == 'time':
+                        lap_df['x_axis'] = lap_df['relative_time']
+                    lap_data.append(lap_df)
+                combined_data.append((file_name, lap_data))
+            else:
+                combined_data.append((file_name, [data]))
 
-            # Calculate average speed and total time
+            # Calculate average speed and total time for the entire file
             avg_speed = data['speedKmh'].mean()
             total_time = data['relative_time'].iloc[-1]
             avg_speeds_text.append(html.Div(f"File: {file_name} - Average Speed: {avg_speed:.2f} km/h, Total Time: {total_time:.2f} s"))
@@ -330,11 +341,18 @@ def update_dashboard(load_clicks, apply_clicks, selected_files, start_range, end
     )
 
     # Add data traces for each file
-    for file_name, data in combined_data:
-        fig.add_trace(go.Scatter(x=data['x_axis'], y=data['speedKmh'], mode='lines', name=f'Speed {file_name}'), row=1, col=1)
-        fig.add_trace(go.Scatter(x=data['x_axis'], y=data['gas'], mode='lines', name=f'Gas {file_name}'), row=2, col=1)
-        fig.add_trace(go.Scatter(x=data['x_axis'], y=data['brake'], mode='lines', name=f'Brake {file_name}'), row=3, col=1)
-    
+    for file_name, data_segments in combined_data:
+        for lap_index, segment in enumerate(data_segments):
+            lap_label = f'Lap {lap_index+1}_{file_name}'
+            fig.add_trace(go.Scatter(x=segment['x_axis'], y=segment['speedKmh'], mode='lines', name=f'Speed {lap_label}'), row=1, col=1)
+            fig.add_trace(go.Scatter(x=segment['x_axis'], y=segment['gas'], mode='lines', name=f'Gas {lap_label}'), row=2, col=1)
+            fig.add_trace(go.Scatter(x=segment['x_axis'], y=segment['brake'], mode='lines', name=f'Brake {lap_label}'), row=3, col=1)
+
+            # Calculate average speed and total time for each lap
+            lap_avg_speed = segment['speedKmh'].mean()
+            lap_total_time = segment['relative_time'].iloc[-1] - segment['relative_time'].iloc[0]
+            avg_speeds_text.append(html.Div(f"{lap_label} - Average Speed: {lap_avg_speed:.2f} km/h, Lap Time: {lap_total_time:.2f} s"))
+
     fig.update_layout(height=800, title_text="Data from Selected Files", xaxis_title=x_axis_label, yaxis_title='Value', legend_title='Metric')
 
     return dcc.Graph(id='telemetry-plot', figure=fig), {'display': 'block'}, True, avg_speeds_text
