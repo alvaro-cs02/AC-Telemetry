@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from app import app, get_config, get_initial_profile, get_telemetry_files
 from commons.utils import collect_telemetry
 from plotly.subplots import make_subplots
-from commons.params import CONFIG_FILE, TELEMETRY_VARIABLES, LOG_DIR
+from commons.params import CONFIG_FILE, TELEMETRY_VARIABLES, LOG_DIR, TELEMETRY_VARIABLES_SELECTABLE
 from datetime import datetime
 import os
 import re
@@ -245,6 +245,59 @@ def store_selected_file(n_clicks, file_ids):
         return None
     
 @app.callback(
+    Output('graph-config', 'children'),
+    [Input('add-graph', 'n_clicks')],
+    [State('graph-config', 'children')]
+)
+def update_graph_config(n_clicks, existing_graphs):
+    if existing_graphs is None:
+        existing_graphs = []
+    
+    if n_clicks is None:
+        return existing_graphs
+    
+    new_graph_config = dbc.CardGroup([
+        dbc.Label(f"Graph {n_clicks}"),
+        dcc.Dropdown(
+            options=[{'label': v, 'value': k} for k, v in TELEMETRY_VARIABLES_SELECTABLE.items()],
+            multi=True,
+            placeholder="Select variables to plot...",
+            id={'type': 'graph-variable-selector', 'index': n_clicks},
+            style={'width': '100%'}  # Ajuste de estilo para hacer el dropdown más ancho
+        )
+    ], className="mb-3")
+
+    return existing_graphs + [new_graph_config]
+
+
+@app.callback(
+    Output('lap-selector-container', 'style'),
+    Output('lap-selector', 'max'),
+    Output('lap-selector', 'marks'),
+    Output('lap-selector', 'value'),
+    Input('file-loaded', 'data'),
+    State('file-selector', 'value')
+)
+def update_lap_selector(file_loaded, selected_files):
+    if not file_loaded or not selected_files:
+        return {'display': 'none'}, 1, {}, [1, 1]
+
+    max_laps = 1
+    for file_name in selected_files:
+        file_path = os.path.join(LOG_DIR, file_name)
+        if os.path.exists(file_path):
+            data = pd.read_csv(file_path, comment='#')
+            if 'completedLaps' in data.columns:
+                max_laps = max(max_laps, data['completedLaps'].max() + 1)  # +1 because laps are 0-indexed
+
+    if max_laps > 1:
+        marks = {i: str(i) for i in range(1, max_laps + 1)}
+        return {'display': 'block'}, max_laps, marks, [1, max_laps]
+
+    return {'display': 'none'}, 1, {}, [1, 1]
+
+
+@app.callback(
     Output('dashboard', 'children'),
     Output('dashboard-options', 'style'),
     Output('file-loaded', 'data'),
@@ -254,16 +307,18 @@ def store_selected_file(n_clicks, file_ids):
     State('file-selector', 'value'),
     State('start-range', 'value'),
     State('end-range', 'value'),
-    State('x-axis-mode', 'value')
+    State('x-axis-mode', 'value'),
+    State('lap-selector', 'value'),
+    State({'type': 'graph-variable-selector', 'index': ALL}, 'value')
 )
-def update_dashboard(load_clicks, apply_clicks, selected_files, start_range, end_range, x_axis_mode):
-    if not selected_files:
-        return html.H4("No files selected or click not registered", className="text-center mt-4"), {'display': 'none'}, False, ""
+def update_dashboard(load_clicks, apply_clicks, selected_files, start_range, end_range, x_axis_mode, selected_laps, selected_variables_per_graph):
+    if not selected_files or not selected_variables_per_graph:
+        return html.H4("No files or variables selected.", className="text-center mt-4"), {'display': 'none'}, False, ""
 
     ctx = callback_context
     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
     if triggered_id == 'load-data' and load_clicks == 0:
-        return html.H4("No files selected or click not registered", className="text-center mt-4"), {'display': 'none'}, False, ""
+        return html.H4("No files or variables selected.", className="text-center mt-4"), {'display': 'none'}, False, ""
 
     combined_data = []
     avg_speeds_text = []
@@ -306,11 +361,11 @@ def update_dashboard(load_clicks, apply_clicks, selected_files, start_range, end
                 data['x_axis'] = data['normalizedCarPosition'] * track_length
                 x_axis_label = 'Distance (meters)'
 
-            # Check for laps
+            # Check for laps and filter by selected laps
             if data['completedLaps'].max() > 0:
                 lap_data = []
                 max_lap = data['completedLaps'].max()
-                for lap in range(max_lap + 1):
+                for lap in range(max(selected_laps[0] - 1, 0), min(selected_laps[1], max_lap + 1)):
                     lap_df = data[data['completedLaps'] == lap].copy()
                     lap_df['relative_time'] = lap_df['relative_time'] - lap_df['relative_time'].iloc[0]  # Reset relative time for each lap
                     if x_axis_mode == 'time':
@@ -332,27 +387,29 @@ def update_dashboard(load_clicks, apply_clicks, selected_files, start_range, end
     if not combined_data:
         return html.H4("No valid data found in selected files.", className="text-center mt-4"), {'display': 'none'}, False, ""
 
-    # Create subplots
+    # Create subplots based on user configuration
+    num_graphs = len(selected_variables_per_graph)
     fig = make_subplots(
-        rows=3, cols=1,
+        rows=num_graphs, cols=1,
         shared_xaxes=True,
         vertical_spacing=0.1,
-        subplot_titles=("Speed", "Gas pedal", "Brake pedal")
+        subplot_titles=[f"Graph {i+1}" for i in range(num_graphs)]
     )
 
-    # Add data traces for each file
+    # Add data traces for each file and graph
     for file_name, data_segments in combined_data:
         for lap_index, segment in enumerate(data_segments):
-            lap_label = f'Lap {lap_index+1}_{file_name}'
-            fig.add_trace(go.Scatter(x=segment['x_axis'], y=segment['speedKmh'], mode='lines', name=f'Speed {lap_label}'), row=1, col=1)
-            fig.add_trace(go.Scatter(x=segment['x_axis'], y=segment['gas'], mode='lines', name=f'Gas {lap_label}'), row=2, col=1)
-            fig.add_trace(go.Scatter(x=segment['x_axis'], y=segment['brake'], mode='lines', name=f'Brake {lap_label}'), row=3, col=1)
+            lap_label = f'Lap {lap_index + selected_laps[0]}_{file_name}'
+            for graph_index, variables in enumerate(selected_variables_per_graph):
+                if variables:  # Check if the user selected variables for this graph
+                    for variable in variables:
+                        fig.add_trace(go.Scatter(x=segment['x_axis'], y=segment[variable], mode='lines', name=f'{TELEMETRY_VARIABLES_SELECTABLE[variable]} {lap_label}'), row=graph_index + 1, col=1)
 
             # Calculate average speed and total time for each lap
             lap_avg_speed = segment['speedKmh'].mean()
             lap_total_time = segment['relative_time'].iloc[-1] - segment['relative_time'].iloc[0]
-            avg_speeds_text.append(html.Div(f"{lap_label} - Average Speed: {lap_avg_speed:.2f} km/h, Lap Time: {lap_total_time:.2f} s"))
+            avg_speeds_text.append(html.Div(f"{lap_label} - Average Speed: {lap_avg_speed:.2f} km/h, Time: {lap_total_time:.2f} s"))
 
-    fig.update_layout(height=800, title_text="Data from Selected Files", xaxis_title=x_axis_label, yaxis_title='Value', legend_title='Metric')
+    fig.update_layout(height=300*num_graphs, title_text="Data from Selected Files", xaxis_title=x_axis_label, yaxis_title='Value', legend_title='Metric')
 
     return dcc.Graph(id='telemetry-plot', figure=fig), {'display': 'block'}, True, avg_speeds_text

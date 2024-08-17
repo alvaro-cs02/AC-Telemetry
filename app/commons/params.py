@@ -175,3 +175,19 @@ TELEMETRY_VARIABLES = {
     }
 }
 
+
+# Diccionario de variables seleccionables
+TELEMETRY_VARIABLES_SELECTABLE = {
+    "speedKmh": "Speed (km/h)",
+    "rpms": "RPM",
+    "gas": "Gas Pedal",
+    "brake": "Brake Pedal",
+    "fuel": "Fuel (liters)",
+    "gear": "Gear",
+    "steerAngle": "Steering Angle",
+    "drs": "DRS Status",
+    "tc": "Traction Control",
+    "abs": "ABS",
+    "turboBoost": "Turbo Boost",
+    "clutch": "Clutch"
+}

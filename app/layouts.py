@@ -2,7 +2,7 @@ from dash import dcc
 from dash import html
 import dash_bootstrap_components as dbc
 from app import get_config, get_initial_profile, get_telemetry_files
-from commons.params import TELEMETRY_VARIABLES
+from commons.params import TELEMETRY_VARIABLES, TELEMETRY_VARIABLES_SELECTABLE
 
 config = get_config()
 initial_profile = get_initial_profile()
@@ -137,6 +137,20 @@ visualization_layout = html.Div([
                             placeholder="Select one or more files...",
                             className="mb-3"
                         ),
+                        html.Div(id='lap-selector-container', style={'display': 'none'}, children=[
+                            html.H4("Select Laps to Plot", className="card-title"),
+                            dcc.RangeSlider(
+                                id='lap-selector',
+                                min=1,
+                                max=1,
+                                step=1,
+                                marks={},
+                                value=[1, 1]
+                            ),
+                        ]),
+                        html.H4("Configure Graphs", className="card-title"),
+                        html.Div(id='graph-config'),
+                        dbc.Button("Add Graph", id='add-graph', color="secondary", className="mt-2 mb-2"),
                         dbc.Button("Load Data", id='load-data', color="primary", className="mt-2 w-100", n_clicks=0)
                     ])
                 ], className="mb-4", style={'height': '100vh'})
