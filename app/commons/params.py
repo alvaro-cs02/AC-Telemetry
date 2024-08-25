@@ -1,7 +1,7 @@
 from ctypes import c_int32
 from pathlib import Path
 
-APP_DIR = Path("C:/Users/usuario/Desktop/Álvaro/Uni/TFG/AC-Telemetry")
+APP_DIR = Path("D:/Work/projects/AC-Telemetry")
 
 LOG_DIR = APP_DIR / "logs"
 CONFIG_FILE = APP_DIR / "app/commons/config.yaml"
