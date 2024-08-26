@@ -12,6 +12,8 @@ import re
 from dash.exceptions import PreventUpdate
 from dash import html
 import dash_bootstrap_components as dbc
+import plotly.express as px
+
 from dash import dcc
 import pandas as pd
 import dash
@@ -323,7 +325,12 @@ def update_dashboard(load_clicks, apply_clicks, selected_files, start_range, end
     combined_data = []
     avg_speeds_text = []
 
-    for file_name in selected_files:
+    # Define a color palette and color map
+    color_palette = px.colors.qualitative.D3  # Choose your color palette
+    color_map = {}
+    unique_color_index = 0
+
+    for file_index, file_name in enumerate(selected_files):
         file_path = os.path.join(LOG_DIR, file_name)
         if not os.path.exists(file_path):
             continue
@@ -397,19 +404,44 @@ def update_dashboard(load_clicks, apply_clicks, selected_files, start_range, end
     )
 
     # Add data traces for each file and graph
-    for file_name, data_segments in combined_data:
+    for file_index, (file_name, data_segments) in enumerate(combined_data):
         for lap_index, segment in enumerate(data_segments):
             lap_label = f'Lap {lap_index + selected_laps[0]}_{file_name}'
+            color_key = (file_name, lap_index)  # Use a tuple of file name and lap index as the color key
+            
+            # Assign a color to each file and lap combination
+            if color_key not in color_map:
+                color_map[color_key] = color_palette[len(color_map) % len(color_palette)]
+
             for graph_index, variables in enumerate(selected_variables_per_graph):
                 if variables:  # Check if the user selected variables for this graph
                     for variable in variables:
-                        fig.add_trace(go.Scatter(x=segment['x_axis'], y=segment[variable], mode='lines', name=f'{TELEMETRY_VARIABLES_SELECTABLE[variable]} {lap_label}'), row=graph_index + 1, col=1)
+                        # Use the same color for all variables of the same file and lap
+                        color = color_map[color_key]
+
+                        fig.add_trace(
+                            go.Scatter(
+                                x=segment['x_axis'],
+                                y=segment[variable],
+                                mode='lines',
+                                name=f'{TELEMETRY_VARIABLES_SELECTABLE[variable]} {lap_label}',
+                                line=dict(color=color)
+                            ),
+                            row=graph_index + 1,
+                            col=1
+                        )
 
             # Calculate average speed and total time for each lap
             lap_avg_speed = segment['speedKmh'].mean()
             lap_total_time = segment['relative_time'].iloc[-1] - segment['relative_time'].iloc[0]
             avg_speeds_text.append(html.Div(f"{lap_label} - Average Speed: {lap_avg_speed:.2f} km/h, Time: {lap_total_time:.2f} s"))
 
-    fig.update_layout(height=300*num_graphs, title_text="Data from Selected Files", xaxis_title=x_axis_label, yaxis_title='Value', legend_title='Metric')
+    fig.update_layout(
+        height=300 * num_graphs,
+        title_text="Data from Selected Files",
+        xaxis_title=x_axis_label,
+        yaxis_title='Value',
+        legend_title='Metric'
+    )
 
     return dcc.Graph(id='telemetry-plot', figure=fig), {'display': 'block'}, True, avg_speeds_text
